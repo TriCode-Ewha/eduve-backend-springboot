@@ -50,4 +50,12 @@ public class File extends CreatedTimeEntity {
     public String getFullPath() {
         return folder.getPath() + "/" + this.fileName;
     }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public void setFolder(Folder folder) {
+        this.folder = folder;
+    }
 }

@@ -1,4 +1,4 @@
-package tricode.eduve.global;
+package tricode.eduve.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
