@@ -1,11 +1,13 @@
 package tricode.eduve.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 import tricode.eduve.domain.File;
 
 @Getter
 @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FileDto {
     private Long FileId;
     private String FileName;

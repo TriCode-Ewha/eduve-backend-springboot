@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tricode.eduve.domain.Folder;
+import tricode.eduve.dto.FileDto;
 import tricode.eduve.dto.FolderDto;
+import tricode.eduve.dto.response.RootFolderDto;
 import tricode.eduve.service.FolderService;
 
 import java.util.List;
@@ -31,10 +33,10 @@ public class FolderController {
         return ResponseEntity.ok(folderService.getFolder(folderId));
     }
 
-    // 모든 폴더 구하는
-    @GetMapping
-    public ResponseEntity<List<FolderDto>> getAllFolders() {
-        return ResponseEntity.ok(folderService.getAllFolders());
+    // 최상위 폴더 목록 조회
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<RootFolderDto>> getRootFoldersByUse(@PathVariable Long userId) {
+        return ResponseEntity.ok(folderService.getRootFoldersByUser(userId));
     }
 
     // 폴더 삭제
@@ -46,7 +48,10 @@ public class FolderController {
 
     // 파일 path 구하기
     @GetMapping("/files/{fileId}/path")
-    public ResponseEntity<String> getFilePath(@PathVariable Long fileId) {
-        return ResponseEntity.ok(folderService.getFilePath(fileId));
+    public ResponseEntity<FileDto> getFilePath(@PathVariable Long fileId) {
+        String path = folderService.getFilePath(fileId);
+        FileDto dto = new FileDto();
+        dto.setFilePath(path);
+        return ResponseEntity.ok(dto);
     }
 }
