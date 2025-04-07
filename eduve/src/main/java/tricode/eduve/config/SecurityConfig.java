@@ -3,6 +3,7 @@ package tricode.eduve.config;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -56,12 +57,13 @@ public class SecurityConfig {
 
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-
                         CorsConfiguration configuration = new CorsConfiguration();
 
+                        // 모든 origin 허용 (테스트용, 운영 시 변경!)
+                        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
+
                         configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                        configuration.setAllowedMethods(Collections.singletonList("*"));
-                        // configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 모든 HTTP 메서드 명시
+                        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 모든 HTTP 메서드 명시
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(3600L);
@@ -72,24 +74,23 @@ public class SecurityConfig {
                     }
                 })));
 
-        //csrf disable
-        http
-                .csrf((auth) -> auth.disable());
+        // CSRF disable
+        http.csrf(csrf -> csrf.disable());
 
-        //From 로그인 방식 disable
-        http
-                .formLogin((auth) -> auth.disable());
+        // Form 로그인 방식 disable
+        http.formLogin(form -> form.disable());
 
-        //http basic 인증 방식 disable
-        http
-                .httpBasic((auth) -> auth.disable());
+        // HTTP Basic 인증 방식 disable
+        http.httpBasic(basic -> basic.disable());
 
-        //경로별 인가 작업
-        http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/logout", "/join/teacher", "/join/student").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
-                        .anyRequest().authenticated());
+
+        // 경로별 인가 작업
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 프리플라이트 요청 허용
+                .requestMatchers("/login", "/", "/logout", "/join/teacher", "/join/student").permitAll()
+                .requestMatchers("/admin").hasRole("ADMIN")
+                .anyRequest().authenticated()
+        );
 
         //JWTFilter 등록
         http

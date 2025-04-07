@@ -57,7 +57,20 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String token = jwtUtil.createJwt(username, role, 60*60*10L);
 
+        // 응답 헤더에 토큰 반환
         response.addHeader("Authorization", "Bearer " + token);
+
+        // JSON 응답 설정
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        // JSON 형태로 토큰 반환
+        String json = String.format("{\"token\": \" Bearer %s\"}", token);
+        try {
+            response.getWriter().write(json);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     //로그인 실패시 실행하는 메소드
