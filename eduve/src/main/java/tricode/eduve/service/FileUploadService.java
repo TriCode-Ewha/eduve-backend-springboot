@@ -8,8 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tricode.eduve.domain.File;
 import tricode.eduve.domain.FileType;
+import tricode.eduve.domain.Folder;
 import tricode.eduve.domain.User;
+import tricode.eduve.global.FlaskComponent;
 import tricode.eduve.repository.FileRepository;
+import tricode.eduve.repository.FolderRepository;
 import tricode.eduve.repository.UserRepository;
 
 import java.io.IOException;
@@ -22,6 +25,8 @@ public class FileUploadService {
     private final AmazonS3Client amazonS3Client;
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
+    private final FolderRepository folderRepository;
+    private final FlaskComponent flaskComponent;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -29,7 +34,7 @@ public class FileUploadService {
     @Value("${cloud.aws.region.static}")
     private String region;
 
-    public String uploadFileToS3(MultipartFile file, Long userId) throws IOException {
+    public String uploadFileToS3(MultipartFile file, Long userId, Long folderId) throws IOException {
         // 파일 이름과 URL 생성
         String fileName = file.getOriginalFilename();
 
@@ -71,17 +76,29 @@ public class FileUploadService {
 
         User user = userOptional.get();
 
+        // 폴더 조회
+        Optional<Folder> folderOptional = folderRepository.findById(folderId);
+        if (folderOptional.isEmpty()) {
+            throw new IOException("Folder not found");
+        }
+        Folder folder = folderOptional.get();
+
         // File 엔티티 객체 생성
         File fileEntity = File.builder()
                 .fileName(fileName)
                 .fileType(fileType)  // 파일 타입 설정
                 .fileUrl(fileUrl)
                 .user(user)
+                .folder(folder) // 폴더 설정
                 .build();
 
         // 파일 엔티티를 DB에 저장
         fileRepository.save(fileEntity);
 
         return fileUrl; // 성공적으로 파일 URL 반환
+    }
+
+    public String embedDocument(MultipartFile file) throws IOException {
+        return flaskComponent.embedDocument(file);
     }
 }

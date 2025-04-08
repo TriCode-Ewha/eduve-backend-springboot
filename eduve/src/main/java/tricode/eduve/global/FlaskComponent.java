@@ -1,10 +1,15 @@
 package tricode.eduve.global;
 
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 
 
@@ -51,5 +56,32 @@ public class FlaskComponent {
 
         ResponseEntity<Map> response = restTemplate.postForEntity(flaskApiUrl, Map.of("topic1", lastTopic, "topic2", newTopic), Map.class);
         return (double) response.getBody().get("similarity");
+    }
+
+    // 임베딩 API 호출
+    public String embedDocument(MultipartFile file) throws IOException {
+        String url = "http://13.125.145.196:5000/embedding";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new MultipartInputStreamFileResource(file.getInputStream(), file.getOriginalFilename()));
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
+
+            // Flask에서 에러 메시지를 JSON 형태로 반환하는 경우 처리 가능
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody();
+            } else {
+                return "Flask server error: " + response.getBody();
+            }
+        } catch (Exception e) {
+            // RestTemplate에서 발생하는 예외 (ex. 서버 다운, 500 오류 등)
+            return "Failed to connect to Flask server: " + e.getMessage();
+        }
     }
 }

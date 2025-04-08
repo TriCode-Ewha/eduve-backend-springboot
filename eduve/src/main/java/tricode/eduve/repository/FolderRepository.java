@@ -12,5 +12,7 @@ import java.util.Optional;
 public interface FolderRepository extends JpaRepository<Folder, Long> {
     Optional<Folder> findByPath(String path);
 
+    Optional<Folder> findById(Long id);
+
     List<Folder> findByUserAndParentFolderIsNull(User user);
 }

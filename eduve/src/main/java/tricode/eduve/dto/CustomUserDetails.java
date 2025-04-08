@@ -50,6 +50,11 @@ public class CustomUserDetails implements UserDetails {
         return userEntity.getUsername();
     }
 
+    public Long getUserId() {
+
+        return userEntity.getUserId();
+    }
+
     public String getName() {
 
         return userEntity.getName();

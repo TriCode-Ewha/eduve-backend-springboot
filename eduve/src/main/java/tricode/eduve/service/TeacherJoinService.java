@@ -33,6 +33,7 @@ public class TeacherJoinService {
     @Transactional
     public void joinProcess(JoinDTO joinDTO) {
 
+        System.out.println("회원가입 진입");
         String username = joinDTO.getUsername();
         String password = joinDTO.getPassword();
         String name = joinDTO.getName();
@@ -42,7 +43,7 @@ public class TeacherJoinService {
         Boolean isExistEmail = userRepository.existsByEmail(email);
 
         if (isExistUsername || isExistEmail) {
-            return;
+            throw new RuntimeException("이미 존재하는 사용자명 또는 이메일입니다.");
         }
 
         User data = new User();
@@ -55,6 +56,9 @@ public class TeacherJoinService {
 
         User savedUser = userRepository.save(data);
         System.out.println("Saved user: " + savedUser);
+
+        userRepository.flush();
+        System.out.println("flush 후 저장 시도됨");
 
 /*
         // 기본 캐릭터 가져오기 (characterId = 1)

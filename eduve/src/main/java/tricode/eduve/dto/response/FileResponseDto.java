@@ -14,6 +14,7 @@ public class FileResponseDto {
     private String fileType;
     private String fileUrl;
     private Long userId;
+    private Long forderId;
 
     // File 엔티티를 DTO로 변환하는 정적 메서드
     public static FileResponseDto from(File file) {
@@ -23,6 +24,7 @@ public class FileResponseDto {
                 .fileType(file.getFileType().name()) // Enum -> String 변환
                 .fileUrl(file.getFileUrl())
                 .userId(file.getUser().getUserId()) // User 엔티티의 userId를 가져옴
+                .forderId(file.getFolder().getFolderId())
                 .build();
     }
 }

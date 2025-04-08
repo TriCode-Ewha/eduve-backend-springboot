@@ -48,6 +48,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String username = customUserDetails.getUsername();
+        Long userId = customUserDetails.getUserId();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
@@ -55,7 +56,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(username, role, 60*60*10L);
+        String token = jwtUtil.createJwt(username, userId, role, 60*60*10L);
 
         // 응답 헤더에 토큰 반환
         response.addHeader("Authorization", "Bearer " + token);
@@ -65,7 +66,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setCharacterEncoding("UTF-8");
 
         // JSON 형태로 토큰 반환
-        String json = String.format("{\"token\": \" Bearer %s\"}", token);
+        String json = String.format("{\"token\": \"Bearer %s\"}", token);
         try {
             response.getWriter().write(json);
         } catch (Exception e) {

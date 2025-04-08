@@ -41,7 +41,7 @@ public class FileService {
         return FileResponseDto.from(file);
     }
 
-    // 파일 위치 변결 (폴더 이동)
+    // 파일 위치 변경 (폴더 이동)
     @Transactional
     public FileResponseDto moveFile(Long fileId, Long newFolderId) {
         File file = fileRepository.findById(fileId)
