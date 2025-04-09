@@ -7,6 +7,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tricode.eduve.dto.response.FileResponseDto;
+import tricode.eduve.dto.response.FileUploadResponseDto;
 import tricode.eduve.global.FlaskComponent;
 import tricode.eduve.service.FileService;
 import tricode.eduve.service.FileUploadService;
@@ -25,21 +26,26 @@ public class FileController {
 
     // 일반 파일 업로드
     @PostMapping("/text")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("userId") Long userId, @RequestParam("folderId") Long folderId) {
+    public ResponseEntity<FileUploadResponseDto> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("userId") Long userId, @RequestParam("folderId") Long folderId) {
         try {
             // 1. 파일을 S3에 업로드
-            String fileUrl = fileUploadService.uploadFileToS3(file, userId,folderId);
+            FileResponseDto fileDto = fileUploadService.uploadFileToS3(file, userId, folderId);
 
             // 2. Flask로 파일 전달하여 임베딩 수행
             String flaskResult = fileUploadService.embedDocument(file);
 
-            // 3. Flask 결과 + S3 URL 같이 리턴 가능
-            String result = "S3 URL: " + fileUrl + "\nFlask Response: " + flaskResult;
-            return ResponseEntity.ok(result);
+            // 3. 결과 합쳐서 JSON으로 반환
+            FileUploadResponseDto responseDto = FileUploadResponseDto.builder()
+                    .fileInfo(fileDto)
+                    .flaskMessage(flaskResult)
+                    .build();
+
+            return ResponseEntity.ok(responseDto);
 
         } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
         }
     }
 

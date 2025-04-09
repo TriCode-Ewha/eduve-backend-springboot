@@ -31,7 +31,7 @@ public class TeacherJoinService {
     }
 
     @Transactional
-    public void joinProcess(JoinDTO joinDTO) {
+    public User joinProcess(JoinDTO joinDTO) {
 
         System.out.println("회원가입 진입");
         String username = joinDTO.getUsername();
@@ -59,6 +59,8 @@ public class TeacherJoinService {
 
         userRepository.flush();
         System.out.println("flush 후 저장 시도됨");
+
+        return savedUser;
 
 /*
         // 기본 캐릭터 가져오기 (characterId = 1)

@@ -10,6 +10,7 @@ import tricode.eduve.domain.File;
 import tricode.eduve.domain.FileType;
 import tricode.eduve.domain.Folder;
 import tricode.eduve.domain.User;
+import tricode.eduve.dto.response.FileResponseDto;
 import tricode.eduve.global.FlaskComponent;
 import tricode.eduve.repository.FileRepository;
 import tricode.eduve.repository.FolderRepository;
@@ -34,7 +35,7 @@ public class FileUploadService {
     @Value("${cloud.aws.region.static}")
     private String region;
 
-    public String uploadFileToS3(MultipartFile file, Long userId, Long folderId) throws IOException {
+    public FileResponseDto uploadFileToS3(MultipartFile file, Long userId, Long folderId) throws IOException {
         // 파일 이름과 URL 생성
         String fileName = file.getOriginalFilename();
 
@@ -95,7 +96,8 @@ public class FileUploadService {
         // 파일 엔티티를 DB에 저장
         fileRepository.save(fileEntity);
 
-        return fileUrl; // 성공적으로 파일 URL 반환
+        // return fileUrl; // 성공적으로 파일 URL 반환
+        return FileResponseDto.from(fileEntity);
     }
 
     public String embedDocument(MultipartFile file) throws IOException {

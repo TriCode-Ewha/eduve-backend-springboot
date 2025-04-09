@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import tricode.eduve.domain.User;
 import tricode.eduve.dto.JoinDTO;
+import tricode.eduve.dto.response.JoinResponseDto;
 import tricode.eduve.service.StudentJoinService;
 
 import java.util.HashMap;
@@ -25,14 +27,15 @@ public class StudentJoinController {
     }
 
     @PostMapping("/join/student")
-    public ResponseEntity<Map<String, Object>> joinProcess(@RequestBody JoinDTO joinDTO) {
+    public ResponseEntity<JoinResponseDto> joinProcess(@RequestBody JoinDTO joinDTO) {
 
         System.out.println(joinDTO.getUsername());
-        studentJoinService.joinProcess(joinDTO);
+        User savedUser = studentJoinService.joinProcess(joinDTO);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "회원가입이 완료되었습니다.");
-        // response.put("userId", joinDTO.getUsername());
+        JoinResponseDto response = JoinResponseDto.builder()
+                .joinDto(joinDTO)
+                .userId(savedUser.getUserId())
+                .build();
 
         return ResponseEntity.ok(response);
     }

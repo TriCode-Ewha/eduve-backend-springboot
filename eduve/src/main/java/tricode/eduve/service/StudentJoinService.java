@@ -32,7 +32,7 @@ public class StudentJoinService {
     }
 
     @Transactional
-    public void joinProcess(JoinDTO joinDTO) {
+    public User joinProcess(JoinDTO joinDTO) {
 
         System.out.println("회원가입 진입");
         String username = joinDTO.getUsername();
@@ -58,6 +58,7 @@ public class StudentJoinService {
         User savedUser = userRepository.save(data);
         System.out.println("savedUser = " + savedUser);
 
+        return savedUser;
 /*
         // 기본 캐릭터 가져오기 (characterId = 1)
         AllCharacter defaultCharacter = allCharacterRepository.findById(1L)
