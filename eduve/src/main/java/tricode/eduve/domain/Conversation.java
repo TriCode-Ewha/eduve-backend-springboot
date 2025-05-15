@@ -48,7 +48,7 @@ public class Conversation extends CreatedTimeEntity {
 
     // 메시지 추가 메서드
     public void addMessage(Message message) {
-        message.setConversation(this);  // 양방향 관계 설정
+        message.setConversation(this);  
         this.messages.add(message);
     }
 
