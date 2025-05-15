@@ -36,7 +36,7 @@ public class Conversation extends CreatedTimeEntity {
     private String lastTopic;
 
     @Column(nullable = false)
-    private LocalDateTime updatedTime; // 제발 메시지 생성 시간
+    private LocalDateTime updatedTime; //메시지 생성 시간
 
 
     public Conversation(String conversationName, User user) {
