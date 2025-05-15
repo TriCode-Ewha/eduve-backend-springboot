@@ -3,8 +3,8 @@ package tricode.eduve.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tricode.eduve.dto.UserCharacterPreferenceDto;
-import tricode.eduve.dto.UserCharacterPreferenceRequestDto;
+import tricode.eduve.dto.response.character.UserCharacterPreferenceDto;
+import tricode.eduve.dto.request.UserCharacterPreferenceRequestDto;
 import tricode.eduve.service.UserCharacterService;
 
 @RestController

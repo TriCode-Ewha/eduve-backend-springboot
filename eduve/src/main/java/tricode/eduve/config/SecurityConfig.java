@@ -87,7 +87,7 @@ public class SecurityConfig {
         // 경로별 인가 작업
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 프리플라이트 요청 허용
-                .requestMatchers("/login", "/", "/logout", "/join/teacher", "/join/student").permitAll()
+                .requestMatchers("/login", "/", "/logout", "/join/teacher", "/join/student", "/join/check-username", "/join/check-email").permitAll()
                 .requestMatchers("/admin").hasRole("ADMIN")
                 .anyRequest().authenticated()
         );

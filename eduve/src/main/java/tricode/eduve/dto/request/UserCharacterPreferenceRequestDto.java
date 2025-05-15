@@ -1,4 +1,4 @@
-package tricode.eduve.dto;
+package tricode.eduve.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

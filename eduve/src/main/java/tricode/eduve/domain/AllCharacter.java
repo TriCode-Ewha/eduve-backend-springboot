@@ -22,4 +22,7 @@ public class AllCharacter {
 
     @Column(nullable = false)
     private String characterName;
+
+    @Column(nullable = true)
+    private String characterImgUrl;
 }

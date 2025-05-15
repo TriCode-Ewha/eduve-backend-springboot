@@ -5,28 +5,25 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import tricode.eduve.domain.AllCharacter;
-import tricode.eduve.domain.Preference;
 import tricode.eduve.domain.User;
 import tricode.eduve.domain.UserCharacter;
 import tricode.eduve.dto.JoinDTO;
 import tricode.eduve.repository.AllCharacterRepository;
-import tricode.eduve.repository.PreferenceRepository;
-import tricode.eduve.repository.UserCharacterRepository;
 import tricode.eduve.repository.UserRepository;
 
 @Service
 public class StudentJoinService {
 
     private final UserRepository userRepository;
-    private final UserCharacterRepository userCharacterRepository;
+    private final UserCharacterService userCharacterService;
     private final AllCharacterRepository allCharacterRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public StudentJoinService(UserRepository userRepository, UserCharacterRepository userCharacterRepository,
+    public StudentJoinService(UserRepository userRepository, UserCharacterService userCharacterService,
                               AllCharacterRepository allCharacterRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
 
         this.userRepository = userRepository;
-        this.userCharacterRepository = userCharacterRepository;
+        this.userCharacterService = userCharacterService;
         this.allCharacterRepository = allCharacterRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
@@ -58,18 +55,15 @@ public class StudentJoinService {
         User savedUser = userRepository.save(data);
         System.out.println("savedUser = " + savedUser);
 
-        return savedUser;
-/*
         // 기본 캐릭터 가져오기 (characterId = 1)
-        AllCharacter defaultCharacter = allCharacterRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("기본 캐릭터를 찾을 수 없습니다."));
+        AllCharacter defaultCharacter = allCharacterRepository.findByAllCharacterId(1L)
+                .orElseThrow(() -> new RuntimeException("기본 캐릭터를 찾을 수 없습니다."));
 
         // 기본 UserCharacter 생성 및 저장
-        UserCharacter defaultUserCharacter = UserCharacter.createDefaultUserCharacter(savedUser, defaultCharacter);
-        userCharacterRepository.save(defaultUserCharacter);
+        UserCharacter defaultUserCharacter = userCharacterService.createDefaultUserCharacter(savedUser, defaultCharacter);
 
         System.out.println("UserCharacter 저장됨: " + defaultUserCharacter);
-*/
 
+        return savedUser;
     }
 }

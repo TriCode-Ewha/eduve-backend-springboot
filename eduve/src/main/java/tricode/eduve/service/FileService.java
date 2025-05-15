@@ -5,9 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tricode.eduve.domain.File;
 import tricode.eduve.domain.Folder;
-import tricode.eduve.dto.response.FileResponseDto;
+import tricode.eduve.dto.response.file_folder.FileResponseDto;
 import tricode.eduve.repository.FileRepository;
 import tricode.eduve.repository.FolderRepository;
+
+import java.util.stream.Collectors;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,36 @@ public class FileService {
         // Dto 변환 후 반환
         return FileResponseDto.from(file);
     }
+
+    /*
+    // 이름순 정렬
+    @Transactional
+    public List<FileResponseDto> getFilesOrderedByName() {
+        return fileRepository.findAllByOrderByFileNameAsc()
+                .stream()
+                .map(FileResponseDto::from)
+                .collect(Collectors.toList());
+    }
+
+    // 최신순 정렬
+    @Transactional
+    public List<FileResponseDto> getFilesOrderedByDate() {
+        return fileRepository.findAllByOrderByCreatedTimeDesc()
+                .stream()
+                .map(FileResponseDto::from)
+                .collect(Collectors.toList());
+    }
+    */
+
+    // 파일 이름 검색
+    @Transactional
+    public List<FileResponseDto> searchFilesByName(String keyword) {
+        return fileRepository.findByFileNameContainingIgnoreCase(keyword)
+                .stream()
+                .map(FileResponseDto::from)
+                .collect(Collectors.toList());
+    }
+
 
     // 파일 삭제
     @Transactional

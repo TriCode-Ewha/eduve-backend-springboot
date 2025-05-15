@@ -33,6 +33,9 @@ public class Message extends CreatedTimeEntity {
     private Message questionMessage;
 
 
+    @OneToOne(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
+    private MessageLike like;
+
 
     // 사용자 메시지 생성자
     public static Message createUserMessage(Conversation conversation, String content) {

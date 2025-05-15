@@ -7,11 +7,19 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import tricode.eduve.domain.Message;
+import tricode.eduve.domain.*;
 import tricode.eduve.dto.request.MessageRequestDto;
-import tricode.eduve.dto.MessageUnitDto;
+import tricode.eduve.dto.response.message.MessageUnitDto;
 import tricode.eduve.global.ChatGptClient;
 import tricode.eduve.global.FlaskComponent;
+import tricode.eduve.repository.FileRepository;
+import tricode.eduve.repository.MessageLikePreferenceRepository;
+import tricode.eduve.repository.MessageRepository;
+import tricode.eduve.repository.UserRepository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -22,6 +30,10 @@ public class ChatService {
     private final ChatGptClient chatGptClient;
     private final FlaskComponent flaskComponent;
     private final ConversationService conversationService;
+    private final UserRepository userRepository;
+    private final UserCharacterService userCharacterService;
+    private final MessageLikePreferenceRepository messageLikePreferenceRepository;
+    private final FileRepository fileRepository;
 
     /*
     // 질문을 저장하고 비동기적으로 ChatGPT API 호출
@@ -87,24 +99,72 @@ public class ChatService {
     }
 
 
-    public MessageUnitDto startConversation(MessageRequestDto requestDto, Long userId) throws JsonProcessingException{
+    public MessageUnitDto startConversation(MessageRequestDto requestDto, Long userId) throws Exception {
 
         String userMessage = requestDto.getQuestion();
 
         // 1. Conversation 처리 (주제 유사도검색 + 1시간 기준)
         Message message = conversationService.processUserMessage(userId, userMessage);
 
-        // 질문 유사도 검색
-        String similarDocuments = flaskComponent.findSimilarDocuments(userMessage);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        // 2. ChatGPT API 호출
-        ResponseEntity<String> response= chatGptClient.chat(userMessage, similarDocuments);
+        // 연결된 선생님 찾기
+        User teacher = null;
+        if (user.getTeacherId() != null) {
+            teacher = userRepository.findById(user.getTeacherId())
+                    .orElseThrow(() -> new RuntimeException("선생님을 찾을 수 없습니다."));
+        }
+        // 질문 유사도 검색
+        String similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, teacher.getUserId());
+
+        // 유사도검색 결과에서 파일명 추출해서 파일 url 반환
+        List<String> fileNameAndUrl = extractFirstFileInfo(similarDocuments);
+
+        // 사용자가 설정한 TONE/DISCRIPTIONLEVEL 조회
+        Preference userPreference = userCharacterService.getPrefernceByUserId(userId); // tone, explanationLevel 포함
+
+        // 사용자 좋아요 분석 조회
+        String analysisResult = messageLikePreferenceRepository.findByUser(user)
+                .map(MessageLikePreference::getAnalysisResult)
+                .orElse(null);
+
+        // 좋아요 분석이 있으면 chatGPT로 같이 보내기
+        ResponseEntity<String> response;
+        if (analysisResult != null && !analysisResult.isBlank()) {
+            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, analysisResult);
+        } else {
+            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, null);
+        }
         String parsedResponse = parseResponse(response);
 
         // 3. 봇 응답 저장
         Message botMessage = Message.createBotResponse(message.getConversation(), parsedResponse, message);
         conversationService.saveBotMessage(botMessage);
 
-        return MessageUnitDto.from(message,botMessage);
+        return MessageUnitDto.from(message,botMessage, fileNameAndUrl);
+    }
+
+    // 유사도 검색 결과에서 파일 제목과 url 추출
+    public List<String> extractFirstFileInfo(String similarDocuments) throws Exception {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode root = objectMapper.readTree(similarDocuments);
+        JsonNode results = root.path("results");
+
+        if (!results.isArray() || results.size() == 0) {
+            return null;
+        }
+
+        JsonNode firstResult = results.get(0);
+        String fileName = firstResult.path("file_name").asText();
+        List<String> filenameAndUrl = new ArrayList<>();
+        filenameAndUrl.add(fileName);
+
+        Optional<File> file = fileRepository.findByFileName(fileName);
+        String url = file.map(File::getFileUrl).orElse(null);
+        filenameAndUrl.add(url);
+
+        return filenameAndUrl;
     }
 }

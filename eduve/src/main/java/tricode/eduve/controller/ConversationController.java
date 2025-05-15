@@ -1,20 +1,12 @@
 package tricode.eduve.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tricode.eduve.domain.Message;
-import tricode.eduve.dto.ConversationWithMessagesDto;
-import tricode.eduve.dto.response.ConversationResponseDto;
-import tricode.eduve.dto.request.MessageRequestDto;
-import tricode.eduve.dto.MessageUnitDto;
-import tricode.eduve.dto.response.MessagesResponseDto;
-import tricode.eduve.service.ChatService;
+import tricode.eduve.dto.response.message.ConversationWithMessagesDto;
+import tricode.eduve.dto.response.message.MessagesResponseDto;
 import tricode.eduve.service.ConversationService;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor

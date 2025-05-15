@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tricode.eduve.dto.AllCharacterResponseDto;
-import tricode.eduve.dto.CharacterUnitDto;
+import tricode.eduve.dto.response.character.AllCharacterResponseDto;
+import tricode.eduve.dto.response.character.CharacterUnitDto;
 import tricode.eduve.service.AllCharacterService;
 
 @RestController

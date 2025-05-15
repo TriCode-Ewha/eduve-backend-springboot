@@ -42,6 +42,13 @@ dependencies {
 	// AWS S3 연동
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
+	// STT 연동
+	implementation 'org.springframework.boot:spring-boot-starter-json'
+	implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+	implementation 'org.apache.httpcomponents:httpmime:4.5.13'
+	implementation 'commons-io:commons-io:2.11.0'
+	implementation 'org.springframework:spring-test'
+
 	// JSON 처리 관련 라이브러리
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'org.json:json:20230227'

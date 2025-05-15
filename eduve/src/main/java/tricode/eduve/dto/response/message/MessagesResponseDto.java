@@ -1,10 +1,8 @@
-package tricode.eduve.dto.response;
+package tricode.eduve.dto.response.message;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import tricode.eduve.domain.Conversation;
-import tricode.eduve.dto.MessageUnitDto;
-import tricode.eduve.dto.OneMessageDto;
 
 import java.util.List;
 

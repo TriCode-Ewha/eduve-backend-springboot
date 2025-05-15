@@ -1,6 +1,5 @@
 package tricode.eduve.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,19 +7,15 @@ import org.springframework.stereotype.Service;
 import tricode.eduve.domain.Conversation;
 import tricode.eduve.domain.Message;
 import tricode.eduve.domain.User;
-import tricode.eduve.dto.ConversationWithMessagesDto;
-import tricode.eduve.dto.OneMessageDto;
-import tricode.eduve.dto.response.ConversationResponseDto;
-import tricode.eduve.dto.request.MessageRequestDto;
-import tricode.eduve.dto.MessageUnitDto;
-import tricode.eduve.dto.response.MessagesResponseDto;
+import tricode.eduve.dto.response.message.ConversationWithMessagesDto;
+import tricode.eduve.dto.response.message.OneMessageDto;
+import tricode.eduve.dto.response.message.MessagesResponseDto;
 import tricode.eduve.global.FlaskComponent;
 import tricode.eduve.repository.ConversationRepository;
 import tricode.eduve.repository.MessageRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -180,12 +175,18 @@ public class ConversationService {
         }
         LocalDateTime createdTime = message.getCreatedTime();
 
+        boolean isLiked = false;
+        if(message.getLike() != null){
+            isLiked = true;
+        }
+
         return new OneMessageDto(
                 messageId,
                 content,
                 isUserMessage,
                 questionMessageId,
-                createdTime
+                createdTime,
+                isLiked
         );
     }
 }

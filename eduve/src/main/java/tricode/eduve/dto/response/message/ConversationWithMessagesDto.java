@@ -1,4 +1,4 @@
-package tricode.eduve.dto;
+package tricode.eduve.dto.response.message;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,14 +19,23 @@ public class ConversationWithMessagesDto {
     public static class MessageDto {
         private String content;
         private boolean isUserMessage;
+        private boolean isLiked;
     }
 
     // Message 목록을 전달하기 위한 메서드
     public static ConversationWithMessagesDto fromConversation(Conversation conversation) {
         List<MessageDto> messageDtos = conversation.getMessages().stream()
-                .map(message -> new MessageDto(message.getContent(), message.isUserMessage()))
+                .map(message -> new MessageDto(
+                        message.getContent(),
+                        message.isUserMessage(),
+                        message.getLike() != null // 좋아요가 있으면 true
+                ))
                 .toList();
 
-        return new ConversationWithMessagesDto(conversation.getConversationId(), conversation.getConversationName(), messageDtos);
+        return new ConversationWithMessagesDto(
+                conversation.getConversationId(),
+                conversation.getConversationName(),
+                messageDtos
+        );
     }
 }

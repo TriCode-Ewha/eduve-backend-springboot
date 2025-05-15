@@ -1,4 +1,4 @@
-package tricode.eduve.dto.response;
+package tricode.eduve.dto.response.file_folder;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +15,7 @@ public class FileResponseDto {
     private String fileUrl;
     private Long userId;
     private Long forderId;
+    private String role;
 
     // File 엔티티를 DTO로 변환하는 정적 메서드
     public static FileResponseDto from(File file) {
@@ -25,6 +26,7 @@ public class FileResponseDto {
                 .fileUrl(file.getFileUrl())
                 .userId(file.getUser().getUserId()) // User 엔티티의 userId를 가져옴
                 .forderId(file.getFolder().getFolderId())
+                .role(file.getUser().getRole()) // 롤값 같이 전달
                 .build();
     }
 }

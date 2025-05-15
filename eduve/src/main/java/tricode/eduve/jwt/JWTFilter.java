@@ -30,7 +30,7 @@ public class JWTFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         // `/join/student` 또는 `/join/teacher` 경로에서는 토큰 인증을 건너뜀
-        if (requestURI.startsWith("/join/student") || requestURI.startsWith("/join/teacher") || requestURI.startsWith("/login")) {
+        if (requestURI.startsWith("/join/student") || requestURI.startsWith("/join/teacher") || requestURI.startsWith("/join/check-username") || requestURI.startsWith("/join/check-email") || requestURI.startsWith("/login")) {
             filterChain.doFilter(request, response);
             return;
         }

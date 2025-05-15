@@ -7,13 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import tricode.eduve.domain.*;
-import tricode.eduve.dto.UserCharacterPreferenceDto;
-import tricode.eduve.dto.UserCharacterPreferenceRequestDto;
+import tricode.eduve.dto.response.character.UserCharacterPreferenceDto;
+import tricode.eduve.dto.request.UserCharacterPreferenceRequestDto;
 import tricode.eduve.repository.AllCharacterRepository;
+import tricode.eduve.repository.PreferenceRepository;
 import tricode.eduve.repository.UserCharacterRepository;
 import tricode.eduve.repository.UserRepository;
-
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -24,6 +23,7 @@ public class UserCharacterService {
     private final UserCharacterRepository userCharacterRepository;
     private final UserRepository userRepository;
     private final AllCharacterRepository allCharacterRepository;
+    private final PreferenceRepository preferenceRepository;
 
     // userId로 캐릭터 설정 업데이트
     public UserCharacterPreferenceDto updateUserCharacter(Long userId, UserCharacterPreferenceRequestDto requestDto) {
@@ -79,5 +79,34 @@ public class UserCharacterService {
 
         return userCharacterRepository.findByUser(user)
                 .orElseThrow(()-> new RuntimeException("not found userCharacter"));
+    }
+
+    // 사용자가 설정한 TONE, DISCRIPTIONLEVEL 조회
+    public Preference getPrefernceByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new RuntimeException("not found user"));
+        UserCharacter userCharacter = userCharacterRepository.findByUser(user)
+                .orElseThrow(()-> new RuntimeException("not found userCharacter"));
+        return userCharacter.getPreference();
+    }
+
+    // 기본값을 설정하는 메서드
+    public Preference createDefaultPreference() {
+        Preference preference = new Preference();
+        preference.setTone(Tone.FRIENDLY);
+        preference.setDescriptionLevel(DescriptionLevel.HIGH);
+        return preferenceRepository.save(preference);
+    }
+
+    // 기본값을 설정하는 메서드
+    public UserCharacter createDefaultUserCharacter(User user, AllCharacter character) {
+        UserCharacter userCharacter = new UserCharacter();
+        userCharacter.setUser(user);
+        // characterId 1인 캐릭터 가져와서 파라미터 넣어주면 될 듯
+        userCharacter.setCharacter(character);
+        userCharacter.setUserCharacterName(character.getCharacterName());
+        // 기본 Preference 설정
+        userCharacter.setPreference(createDefaultPreference());
+        return userCharacterRepository.save(userCharacter);
     }
 }
