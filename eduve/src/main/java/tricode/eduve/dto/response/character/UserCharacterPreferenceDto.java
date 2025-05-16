@@ -14,7 +14,7 @@ public class UserCharacterPreferenceDto {
     private Long characterId;
     private String userCharacterName;
     private Long userCharacterId;
-    //private String userCharacterImgUrl;
+    private String userCharacterImgUrl;
     private String tone;
     private String descriptionLevel;
 
@@ -23,6 +23,7 @@ public class UserCharacterPreferenceDto {
                 userCharacter.getCharacter().getAllCharacterId(),
                 userCharacter.getUserCharacterName(),
                 userCharacter.getUserCharacterId(),
+                userCharacter.getCharacter().getCharacterImgUrl(),
                 userCharacter.getPreference().getTone().name(),  // Enum을 String으로 변환
                 userCharacter.getPreference().getDescriptionLevel().name()  // Enum을 String으로 변환
         );

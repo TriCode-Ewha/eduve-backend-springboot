@@ -12,6 +12,7 @@ import tricode.eduve.repository.AllCharacterRepository;
 import tricode.eduve.repository.UserRepository;
 
 @Service
+@Transactional
 public class StudentJoinService {
 
     private final UserRepository userRepository;
