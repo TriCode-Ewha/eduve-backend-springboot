@@ -32,7 +32,7 @@ public class FlaskComponent {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // 요청 바디 설정 (JSON 포맷)
-        String requestBody = "{ \"query\": \"" + question + "\", \"user_id\": \"" + userId + "\", \"teacher_id\": \"" + teacherId + "\" }";
+        String requestBody = "{ \"query\": \"" + question + "\", \"userId\": \"" + userId + "\", \"teacherId\": \"" + teacherId + "\" }";
 
         // HTTP 요청 엔티티 생성
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
