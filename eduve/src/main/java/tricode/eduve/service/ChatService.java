@@ -152,12 +152,21 @@ public class ChatService {
         JsonNode root = objectMapper.readTree(similarDocuments);
         JsonNode results = root.path("results");
 
-        if (!results.isArray() || results.size() == 0) {
+        // results가 배열이 아니거나 비어 있으면 null 반환
+        if (!results.isArray() || results.isEmpty()) {
             return null;
         }
 
         JsonNode firstResult = results.get(0);
+        if (firstResult == null || firstResult.isEmpty()) {
+            return null;
+        }
+
         String fileName = firstResult.path("file_name").asText();
+        if (fileName == null || fileName.isEmpty()) {
+            return null;
+        }
+
         List<String> filenameAndUrl = new ArrayList<>();
         filenameAndUrl.add(fileName);
 
