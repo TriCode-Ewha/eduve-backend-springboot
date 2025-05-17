@@ -100,7 +100,7 @@ public class ConversationService {
             // 3. 유사도 검사
             String newTopic = flaskComponent.extractTopic(userMessage);
             double similarity = flaskComponent.calculateSimilarity(lastTopic, newTopic);
-            boolean isNewTopic = similarity < 0.8;
+            boolean isNewTopic = similarity < 0.2;
 
             // 4. 새 Conversation 생성 여부
             if (isTimeExceeded || isNewTopic) {
