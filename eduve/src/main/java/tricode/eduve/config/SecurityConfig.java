@@ -51,56 +51,43 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        // CORS 문제 해결 설정
-        http
-                .cors((corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
+        http.cors(cors -> cors.configurationSource(new CorsConfigurationSource() {
+            @Override
+            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                CorsConfiguration configuration = new CorsConfiguration();
 
-                    @Override
-                    public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-                        CorsConfiguration configuration = new CorsConfiguration();
+                // localhost:3000만 허용
+                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
 
-                        // 모든 origin 허용 (테스트용, 운영 시 변경!)
-                        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
+                // 또는, 테스트용 모든 origin 허용(자격 증명 없을 때만)
+                // configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
 
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                        configuration.setAllowedMethods(List.of("GET", "PATCH", "POST", "PUT", "DELETE", "OPTIONS")); // 모든 HTTP 메서드 명시
-                        configuration.setAllowCredentials(true);
-                        configuration.setAllowedHeaders(Collections.singletonList("*"));
-                        configuration.setMaxAge(3600L);
+                configuration.setAllowedMethods(List.of("GET", "PATCH", "POST", "PUT", "DELETE", "OPTIONS"));
+                configuration.setAllowCredentials(true);
+                configuration.setAllowedHeaders(Collections.singletonList("*"));
+                configuration.setMaxAge(3600L);
+                configuration.setExposedHeaders(Collections.singletonList("Authorization"));
 
-                        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+                return configuration;
+            }
+        }));
 
-                        return configuration;
-                    }
-                })));
-
-        // CSRF disable
         http.csrf(csrf -> csrf.disable());
-
-        // Form 로그인 방식 disable
         http.formLogin(form -> form.disable());
-
-        // HTTP Basic 인증 방식 disable
         http.httpBasic(basic -> basic.disable());
 
-
-        // 경로별 인가 작업
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 프리플라이트 요청 허용
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/login", "/", "/logout", "/join/teacher", "/join/student", "/join/check-username", "/join/check-email").permitAll()
                 .requestMatchers("/admin").hasRole("ADMIN")
                 .anyRequest().authenticated()
         );
 
-        //JWTFilter 등록
         http
-                .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class) // JWT 필터를 로그인 필터 뒤로
+                .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
-        //세션 설정
-        http
-                .sessionManagement((session) -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
