@@ -7,6 +7,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import tricode.eduve.domain.User;
 
 import java.io.IOException;
 import java.util.Map;
@@ -23,16 +24,23 @@ public class FlaskComponent {
 
 
     // 유사도 검색 flask API 호출
-    public String findSimilarDocuments(String question, Long userId, Long teacherId) {
-        //String flaskApiUrl = "http://13.209.87.47:5000/search";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
-        String flaskApiUrl = "http://localhost:5000/search";
+    public String findSimilarDocuments(String question, Long userId, User teacher) {
+        String flaskApiUrl = "http://54.180.121.68:5000/search";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
+        //String flaskApiUrl = "http://localhost:5000/search";
 
         // 요청 헤더 설정
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // 요청 바디 설정 (JSON 포맷)
-        String requestBody = "{ \"query\": \"" + question + "\", \"userId\": \"" + userId + "\", \"teacherId\": \"" + teacherId + "\" }";
+        String requestBody;
+        if(teacher != null){
+            // 요청 바디 설정 (JSON 포맷)
+            requestBody = "{ \"query\": \"" + question + "\", \"userId\": \"" + userId + "\", \"teacherId\": \"" + teacher.getUserId() + "\" }";
+        }else{
+            // 요청 바디 설정 (JSON 포맷)
+            requestBody = "{ \"query\": \"" + question + "\", \"userId\": \"" + userId + "\" }";
+        }
+
 
         // HTTP 요청 엔티티 생성
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
@@ -45,16 +53,16 @@ public class FlaskComponent {
     }
 
     public String extractTopic(String userMessage) {
-        //String flaskApiUrl = "http://13.209.87.47:5000/extractTopic";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
-        String flaskApiUrl = "http://localhost:5000/extractTopic";
+        String flaskApiUrl = "http://54.180.121.68:5000/extractTopic";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
+        //String flaskApiUrl = "http://localhost:5000/extractTopic";
 
         ResponseEntity<Map> response = restTemplate.postForEntity(flaskApiUrl, Map.of("message", userMessage), Map.class);
         return (String) response.getBody().get("topic");
     }
 
     public double calculateSimilarity(String lastTopic, String newTopic) {
-        //String flaskApiUrl = "http://13.209.87.47:5000/calculateSimilarity";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
-        String flaskApiUrl = "http://localhost:5000/calculateSimilarity";
+        String flaskApiUrl = "http://54.180.121.68:5000/calculateSimilarity";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
+        //String flaskApiUrl = "http://localhost:5000/calculateSimilarity";
 
         ResponseEntity<Map> response = restTemplate.postForEntity(flaskApiUrl, Map.of("topic1", lastTopic, "topic2", newTopic), Map.class);
         return (double) response.getBody().get("similarity");
@@ -62,8 +70,8 @@ public class FlaskComponent {
 
     // 임베딩 API 호출
     public String embedDocument(MultipartFile file, Long userId) throws IOException {
-        //String url = "http://13.209.87.47:5000/embedding";
-        String url = "http://localhost:5000/embedding";
+        String url = "http://54.180.121.68:5000/embedding";
+        //String url = "http://localhost:5000/embedding";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);

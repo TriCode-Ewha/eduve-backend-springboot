@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import tricode.eduve.domain.Conversation;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -12,6 +13,7 @@ public class ConversationWithMessagesDto {
 
     private Long conversationId;
     private String conversationName;
+    private LocalDateTime createTime;
     private List<MessageDto> messages;
 
     @Getter
@@ -35,6 +37,7 @@ public class ConversationWithMessagesDto {
         return new ConversationWithMessagesDto(
                 conversation.getConversationId(),
                 conversation.getConversationName(),
+                conversation.getCreatedTime(),
                 messageDtos
         );
     }

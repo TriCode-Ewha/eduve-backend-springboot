@@ -106,20 +106,25 @@ public class ChatService {
         // 1. Conversation 처리 (주제 유사도검색 + 1시간 기준)
         Message message = conversationService.processUserMessage(userId, userMessage);
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        // 연결된 선생님 찾기
-        User teacher = null;
-        if (user.getTeacherId() != null) {
-            teacher = userRepository.findById(user.getTeacherId())
-                    .orElseThrow(() -> new RuntimeException("선생님을 찾을 수 없습니다."));
+        String similarDocuments = null;
+        if (user.getRole().equals("ROLE_Student")) {
+            Optional<User> teacher = userRepository.findByUserId(user.getTeacherId());
+            if (teacher.isPresent()) {
+                // 질문 유사도 검색
+                similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, teacher.get());
+            }else{
+                similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, null);
+            }
+        }else{
+            // 질문 유사도 검색
+            similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, null);
         }
-        // 질문 유사도 검색
-        String similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, teacher.getUserId());
 
         // 유사도검색 결과에서 파일명 추출해서 파일 url 반환
-        List<String> fileNameAndUrl = extractFirstFileInfo(similarDocuments);
+        List<String> filenamePageAndUrl = extractFirstFileInfo(similarDocuments);
 
         // 사용자가 설정한 TONE/DISCRIPTIONLEVEL 조회
         Preference userPreference = userCharacterService.getPrefernceByUserId(userId); // tone, explanationLevel 포함
@@ -142,7 +147,7 @@ public class ChatService {
         Message botMessage = Message.createBotResponse(message.getConversation(), parsedResponse, message);
         conversationService.saveBotMessage(botMessage);
 
-        return MessageUnitDto.from(message,botMessage, fileNameAndUrl);
+        return MessageUnitDto.from(message,botMessage, filenamePageAndUrl);
     }
 
     // 유사도 검색 결과에서 파일 제목과 url 추출
@@ -167,13 +172,16 @@ public class ChatService {
             return null;
         }
 
-        List<String> filenameAndUrl = new ArrayList<>();
-        filenameAndUrl.add(fileName);
+        String page = firstResult.path("page").asText(); // 페이지 번호 문자열로 파싱
+
+        List<String> filenamePageAndUrl = new ArrayList<>();
+        filenamePageAndUrl.add(fileName);
+        filenamePageAndUrl.add(page); // 페이지 추가
 
         Optional<File> file = fileRepository.findByFileName(fileName);
         String url = file.map(File::getFileUrl).orElse(null);
-        filenameAndUrl.add(url);
+        filenamePageAndUrl.add(url);
 
-        return filenameAndUrl;
+        return filenamePageAndUrl;
     }
 }
