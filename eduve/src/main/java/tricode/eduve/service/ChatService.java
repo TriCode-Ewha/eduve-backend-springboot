@@ -172,6 +172,12 @@ public class ChatService {
             return null;
         }
 
+        // score 확인
+        double score = firstResult.path("score").asDouble();
+        if (score >= 0.36) {
+            return null;
+        }
+
         String page = firstResult.path("page").asText(); // 페이지 번호 문자열로 파싱
 
         List<String> filenamePageAndUrl = new ArrayList<>();
