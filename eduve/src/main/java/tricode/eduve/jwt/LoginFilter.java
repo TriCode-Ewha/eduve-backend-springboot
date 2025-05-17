@@ -66,7 +66,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setCharacterEncoding("UTF-8");
 
         // JSON 형태로 토큰 반환
-        String json = String.format("{\"token\": \"Bearer %s\"}", token);
+        String json = String.format("{\"token\": \"Bearer %s\", \"userId\": %d}", token, userId);
         try {
             response.getWriter().write(json);
         } catch (Exception e) {
