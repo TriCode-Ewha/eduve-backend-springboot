@@ -9,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import tricode.eduve.domain.User;
-import tricode.eduve.dto.CustomUserDetails;
+import tricode.eduve.dto.response.User.CustomUserDetails;
 
 import java.io.IOException;
 

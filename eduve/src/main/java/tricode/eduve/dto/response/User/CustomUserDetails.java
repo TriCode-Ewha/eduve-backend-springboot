@@ -1,4 +1,4 @@
-package tricode.eduve.dto;
+package tricode.eduve.dto.response.User;
 
 import org.springframework.security.core.GrantedAuthority;
 import tricode.eduve.domain.User;
@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 public class CustomUserDetails implements UserDetails {
 

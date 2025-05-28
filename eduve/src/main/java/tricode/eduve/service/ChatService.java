@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import tricode.eduve.domain.*;
+import tricode.eduve.dto.common.FileInfoDto;
 import tricode.eduve.dto.request.MessageRequestDto;
 import tricode.eduve.dto.response.message.MessageUnitDto;
 import tricode.eduve.global.ChatGptClient;
@@ -111,10 +112,14 @@ public class ChatService {
 
         String similarDocuments = null;
         if (user.getRole().equals("ROLE_Student")) {
-            Optional<User> teacher = userRepository.findByUserId(user.getTeacherId());
+            System.out.println("진입 성공");
+            Optional<User> teacher = userRepository.findByUsernameAndRole(user.getTeacherUsername(), "ROLE_Teacher");
             if (teacher.isPresent()) {
                 // 질문 유사도 검색
                 similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, teacher.get());
+                // 선생님 잘 찾았는지 로그 찍기
+                User teacherUser = teacher.get();
+                System.out.println("teacher username: " + teacherUser.getUsername());
             }else{
                 similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, null);
             }
@@ -124,7 +129,7 @@ public class ChatService {
         }
 
         // 유사도검색 결과에서 파일명 추출해서 파일 url 반환
-        List<String> filenamePageAndUrl = extractFirstFileInfo(similarDocuments);
+        FileInfoDto fileInfo = extractFirstFileInfo(similarDocuments);
 
         // 사용자가 설정한 TONE/DISCRIPTIONLEVEL 조회
         Preference userPreference = userCharacterService.getPrefernceByUserId(userId); // tone, explanationLevel 포함
@@ -137,9 +142,9 @@ public class ChatService {
         // 좋아요 분석이 있으면 chatGPT로 같이 보내기
         ResponseEntity<String> response;
         if (analysisResult != null && !analysisResult.isBlank()) {
-            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, analysisResult);
+            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, analysisResult, fileInfo);
         } else {
-            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, null);
+            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, null, fileInfo);
         }
         String parsedResponse = parseResponse(response);
 
@@ -147,11 +152,13 @@ public class ChatService {
         Message botMessage = Message.createBotResponse(message.getConversation(), parsedResponse, message);
         conversationService.saveBotMessage(botMessage);
 
-        return MessageUnitDto.from(message,botMessage, filenamePageAndUrl);
+        return MessageUnitDto.from(message,botMessage, fileInfo);
     }
 
     // 유사도 검색 결과에서 파일 제목과 url 추출
-    public List<String> extractFirstFileInfo(String similarDocuments) throws Exception {
+    public FileInfoDto extractFirstFileInfo(String similarDocuments) throws Exception {
+
+        final double SCORE_THRESHOLD = 0.38;
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode root = objectMapper.readTree(similarDocuments);
@@ -174,20 +181,18 @@ public class ChatService {
 
         // score 확인
         double score = firstResult.path("score").asDouble();
-        if (score >= 0.36) {
+        if (score >= SCORE_THRESHOLD) {
             return null;
         }
 
         String page = firstResult.path("page").asText(); // 페이지 번호 문자열로 파싱
 
-        List<String> filenamePageAndUrl = new ArrayList<>();
-        filenamePageAndUrl.add(fileName);
-        filenamePageAndUrl.add(page); // 페이지 추가
-
         Optional<File> file = fileRepository.findByFileName(fileName);
         String url = file.map(File::getFileUrl).orElse(null);
-        filenamePageAndUrl.add(url);
 
-        return filenamePageAndUrl;
+        // filePath 추가
+        String filePath = file.map(File::getFullPath).orElse(null);
+
+        return new FileInfoDto(fileName, page, url, filePath);
     }
 }

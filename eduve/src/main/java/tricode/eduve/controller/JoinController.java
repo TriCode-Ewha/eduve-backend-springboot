@@ -1,12 +1,11 @@
 package tricode.eduve.controller;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tricode.eduve.domain.User;
-import tricode.eduve.dto.JoinDTO;
-import tricode.eduve.dto.response.JoinResponseDto;
+import tricode.eduve.dto.request.User.JoinDTO;
+import tricode.eduve.dto.response.User.JoinResponseDto;
 import tricode.eduve.repository.UserRepository;
 import tricode.eduve.service.StudentJoinService;
 import tricode.eduve.service.TeacherJoinService;

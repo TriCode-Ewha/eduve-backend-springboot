@@ -4,10 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tricode.eduve.domain.User;
-import tricode.eduve.dto.UpdateUserDto;
+import tricode.eduve.dto.request.User.UpdateUserDto;
 import tricode.eduve.repository.UserRepository;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

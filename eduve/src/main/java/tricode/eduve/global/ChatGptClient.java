@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import tricode.eduve.domain.MessageLikePreference;
 import tricode.eduve.domain.Preference;
+import tricode.eduve.dto.common.FileInfoDto;
 
 import java.util.*;
 
@@ -26,7 +27,7 @@ public class ChatGptClient {
     RestTemplate restTemplate = new RestTemplate();
 
 
-    public ResponseEntity<String> chat(String question, String similarDocuments, Preference preference, String messageLikeAnalysisResult) {
+    public ResponseEntity<String> chat(String question, String similarDocuments, Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
 
         HttpHeaders headers = new HttpHeaders(); // HTTP 헤더 생성
         headers.setContentType(MediaType.APPLICATION_JSON); // 요청 본문 타입 설정
@@ -36,7 +37,7 @@ public class ChatGptClient {
         JSONObject messageSystem = new JSONObject(); // 시스템 메시지 JSON 객체 생성
         messageSystem.put("role", "system");  // 역할 설정
 
-        String prompt = buildPrompt(similarDocuments, preference, messageLikeAnalysisResult);
+        String prompt = buildPrompt(similarDocuments, preference, messageLikeAnalysisResult, fileInfo);
         messageSystem.put("content", prompt); // 시스템 메시지 추가
 
         JSONObject messageUser = new JSONObject(); // 사용자 메시지 JSON 객체 생성
@@ -67,7 +68,7 @@ public class ChatGptClient {
         }
     }
 
-    private String buildPrompt(String similarDocuments, Preference preference, String messageLikeAnalysisResult) {
+    private String buildPrompt(String similarDocuments, Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
 
         // 톤과 설명 수준에 맞는 프롬프트 설정
         String toneInstruction = preference.getTone().getPromptInstruction();
@@ -75,21 +76,29 @@ public class ChatGptClient {
 
         StringBuilder promptBuilder = new StringBuilder();
 
-        promptBuilder.append("너는 학생들에게 모르는 부분을 친절하게 설명해주는 학습 보조 챗봇이야. ")
-                .append(toneInstruction)
-                .append(levelInstruction)
-                .append("질문에 답할 때는 반드시 제공된 '관련 문서'를 근거로 설명해야 해. ")
-                .append("관련 문서에 없는 내용은 절대 추측하거나 지어내지 마. ");
+        promptBuilder.append("너는 학생들에게 모르는 부분을 친절하게 설명해주는 학습 보조 챗봇이야.\n")
+                .append(toneInstruction).append("\n")
+                .append(levelInstruction).append("\n\n")
+                .append("질문에 답할 때는 반드시 제공된 '관련 문서'를 근거로 설명해야 해.\n")
+                .append("관련 문서에 없는 내용은 절대 추측하거나 지어내지 마.\n\n");
 
         // 사용자의 좋아요 기반 분석 결과가 있으면 참고용으로 추가
         if (messageLikeAnalysisResult != null && !messageLikeAnalysisResult.isBlank()) {
-            promptBuilder.append("또한 사용자가 선호하는 답변 스타일은 다음과 같아. 이를 참고해서 답변을 구성해줘: ")
-                    .append(messageLikeAnalysisResult)
-                    .append(" ");
+            promptBuilder.append("또한 사용자가 선호하는 답변 스타일은 다음과 같아. 이를 참고해서 답변을 구성해줘:\n")
+                    .append(messageLikeAnalysisResult).append("\n\n");
         }
 
-        promptBuilder.append("다음은 관련 문서야: ")
-                .append(similarDocuments);
+        if (fileInfo != null) {
+            String filePath = fileInfo.getFilePath();
+            String page = fileInfo.getPage();
+
+            promptBuilder.append("이 질문과 관련된 문서는 다음 경로에 있어: '")
+                    .append(filePath).append("', 관련 페이지는 ").append(page).append("이야.\n");
+            promptBuilder.append("만약 사용자가 문서의 위치나 접근 방법을 묻는다면 이 정보를 활용해서 답변해줘.\n\n");
+        }
+
+        promptBuilder.append("다음은 관련 문서야:\n")
+                .append(similarDocuments).append("\n");
 
         return promptBuilder.toString();
     }

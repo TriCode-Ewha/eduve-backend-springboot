@@ -1,10 +1,8 @@
-package tricode.eduve.dto.response;
+package tricode.eduve.dto.response.User;
 
 import lombok.Builder;
 import lombok.Getter;
 import tricode.eduve.domain.User;
-
-import java.time.LocalDateTime;
 
 @Getter
 public class UserResponseDto {

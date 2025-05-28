@@ -9,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import tricode.eduve.dto.CustomUserDetails;
+import tricode.eduve.dto.response.User.CustomUserDetails;
 
 import java.util.Collection;
 import java.util.Iterator;

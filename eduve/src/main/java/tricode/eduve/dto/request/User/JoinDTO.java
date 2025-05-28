@@ -1,4 +1,4 @@
-package tricode.eduve.dto;
+package tricode.eduve.dto.request.User;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -10,4 +10,5 @@ public class JoinDTO {
     private String username;
     private String password;
     private String email;
+    private String teacherUsername;
 }

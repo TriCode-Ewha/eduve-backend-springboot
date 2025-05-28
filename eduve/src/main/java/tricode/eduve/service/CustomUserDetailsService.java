@@ -5,8 +5,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import tricode.eduve.domain.User;
-import tricode.eduve.dto.CustomUserDetails;
+import tricode.eduve.dto.response.User.CustomUserDetails;
 import tricode.eduve.repository.UserRepository;
+
+import java.util.Optional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {

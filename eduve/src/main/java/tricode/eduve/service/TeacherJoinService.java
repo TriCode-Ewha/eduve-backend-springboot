@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import tricode.eduve.domain.AllCharacter;
 import tricode.eduve.domain.User;
 import tricode.eduve.domain.UserCharacter;
-import tricode.eduve.dto.JoinDTO;
+import tricode.eduve.dto.request.User.JoinDTO;
 import tricode.eduve.repository.AllCharacterRepository;
 import tricode.eduve.repository.UserRepository;
 

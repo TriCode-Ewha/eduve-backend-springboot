@@ -4,9 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tricode.eduve.domain.User;
-import tricode.eduve.dto.UpdateUserDto;
-import tricode.eduve.dto.response.UserResponseDto;
-import tricode.eduve.repository.UserRepository;
+import tricode.eduve.dto.request.User.UpdateUserDto;
+import tricode.eduve.dto.response.User.UserResponseDto;
 import tricode.eduve.service.UserService;
 
 @RestController

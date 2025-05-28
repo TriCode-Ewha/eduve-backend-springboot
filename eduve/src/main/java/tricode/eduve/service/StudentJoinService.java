@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import tricode.eduve.domain.AllCharacter;
 import tricode.eduve.domain.User;
 import tricode.eduve.domain.UserCharacter;
-import tricode.eduve.dto.JoinDTO;
+import tricode.eduve.dto.request.User.JoinDTO;
 import tricode.eduve.repository.AllCharacterRepository;
 import tricode.eduve.repository.UserRepository;
 
@@ -37,6 +37,7 @@ public class StudentJoinService {
         String password = joinDTO.getPassword();
         String name = joinDTO.getName();
         String email = joinDTO.getEmail();
+        String teacherUsername = joinDTO.getTeacherUsername();
 
         Boolean isExistUsername = userRepository.existsByUsername(username);
         Boolean isExistEmail = userRepository.existsByEmail(email);
@@ -45,12 +46,19 @@ public class StudentJoinService {
             throw new RuntimeException("이미 존재하는 사용자명 또는 이메일입니다.");
         }
 
+        Boolean isExistTeacherId = userRepository.existsByUsername(teacherUsername);
+
+        if (!isExistTeacherId) {
+            throw new RuntimeException("존재하지 않는 선생님 아이디입니다.");
+        }
+
         User data = new User();
 
         data.setUsername(username);
         data.setPassword(bCryptPasswordEncoder.encode(password));
         data.setName(name);
         data.setEmail(email);
+        data.setTeacherUsername(teacherUsername);
         data.setRole("ROLE_Student");
 
         User savedUser = userRepository.save(data);
