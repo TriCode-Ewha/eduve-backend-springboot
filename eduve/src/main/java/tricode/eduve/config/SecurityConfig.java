@@ -57,7 +57,11 @@ public class SecurityConfig {
                 CorsConfiguration configuration = new CorsConfiguration();
 
                 // localhost:3000만 허용
-                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                configuration.setAllowedOrigins(List.of(
+                        "http://localhost:3000",
+                        "https://generated-chaos-find-doctor.trycloudflare.com",
+                        "https://eduve-frontend-finale.vercel.app"
+                        ));
 
                 // 또는, 테스트용 모든 origin 허용(자격 증명 없을 때만)
                 // configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
