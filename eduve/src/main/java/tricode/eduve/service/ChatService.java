@@ -15,11 +15,10 @@ import tricode.eduve.global.ChatGptClient;
 import tricode.eduve.global.FlaskComponent;
 import tricode.eduve.repository.FileRepository;
 import tricode.eduve.repository.MessageLikePreferenceRepository;
-import tricode.eduve.repository.MessageRepository;
 import tricode.eduve.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 
@@ -35,6 +34,8 @@ public class ChatService {
     private final UserCharacterService userCharacterService;
     private final MessageLikePreferenceRepository messageLikePreferenceRepository;
     private final FileRepository fileRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
 
     /*
     // 질문을 저장하고 비동기적으로 ChatGPT API 호출
@@ -166,27 +167,27 @@ public class ChatService {
 
         // results가 배열이 아니거나 비어 있으면 null 반환
         if (!results.isArray() || results.isEmpty()) {
-            System.out.println("❌ results가 비어 있음");
+            log.warn("❌ results가 비어 있음");
             return null;
         }
 
         JsonNode firstResult = results.get(0);
         if (firstResult == null || firstResult.isEmpty()) {
-            System.out.println("❌ firstResult가 비어 있음");
+            log.warn("❌ firstResult가 비어 있음");
             return null;
         }
 
         String fileName = firstResult.path("file_name").asText();
-        System.out.println("📄 fileName: " + fileName);
+        log.info("📄 fileName: {}", fileName);
         if (fileName == null || fileName.isEmpty()) {
             return null;
         }
 
         // score 확인
         double score = firstResult.path("score").asDouble();
-        System.out.println("📊 score: " + score);
+        log.info("📊 score: {}", score);
         if (score >= SCORE_THRESHOLD) {
-            System.out.println("⚠️ score threshold 초과");
+            log.warn("⚠️ score threshold 초과");
             return null;
         }
 
@@ -194,7 +195,7 @@ public class ChatService {
 
         Optional<File> file = fileRepository.findByFileName(fileName);
         if (file.isEmpty()) {
-            System.out.println("❌ fileRepository에서 파일 없음");
+            log.warn("❌ fileRepository에서 파일 없음");
             return null;
         }
 
@@ -203,8 +204,8 @@ public class ChatService {
         // filePath 추가
         String filePath = file.map(File::getFullPath).orElse(null);
 
-        System.out.println("🌐 url: " + url);
-        System.out.println("📂 filePath: " + filePath);
+        log.info("🌐 url: {}", url);
+        log.info("📂 filePath: {}", filePath);
 
 
         return new FileInfoDto(fileName, page, url, filePath);
