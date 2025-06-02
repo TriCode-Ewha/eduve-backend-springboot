@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tricode.eduve.domain.File;
@@ -180,11 +181,14 @@ public class FileUploadService {
         User user = userOptional.get();
 
         // 폴더 조회
-        Optional<Folder> folderOptional = folderRepository.findById(folderId);
-        if (folderOptional.isEmpty()) {
-            throw new IOException("Folder not found");
+        Folder folder = null;
+        if(folderId != null) {
+            Optional<Folder> folderOptional = folderRepository.findById(folderId);
+            if (folderOptional.isEmpty()) {
+                throw new IOException("Folder not found");
+            }
+            folder = folderOptional.get();
         }
-        Folder folder = folderOptional.get();
 
         // File 엔티티 객체 생성
         File fileEntity = File.builder()

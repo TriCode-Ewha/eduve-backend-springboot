@@ -3,6 +3,7 @@ package tricode.eduve.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tricode.eduve.dto.response.file_folder.FileResponseDto;
@@ -26,7 +27,7 @@ public class FileController {
     @PostMapping("/voice")
     public ResponseEntity<FileUploadResponseDto> uploadVoiceFile(@RequestParam("file") MultipartFile file,
                                                                  @RequestParam("userId") Long userId,
-                                                                 @RequestParam("folderId") Long folderId) throws IOException {
+                                                                 @RequestParam(value = "folderId", required = false) Long folderId) throws IOException {
         try {
             FileUploadResponseDto responseDto = fileUploadService.uploadAudioAndTranscribe(file, userId, folderId);
 
@@ -40,7 +41,7 @@ public class FileController {
     }
     // 일반 파일 업로드
     @PostMapping("/text")
-    public ResponseEntity<FileUploadResponseDto> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("userId") Long userId, @RequestParam("folderId") Long folderId) {
+    public ResponseEntity<FileUploadResponseDto> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("userId") Long userId, @RequestParam(value = "folderId", required = false) Long folderId) {
         try {
             // 1. 파일을 S3에 업로드
             FileResponseDto fileDto = fileUploadService.uploadFileToS3(file, userId, folderId);
