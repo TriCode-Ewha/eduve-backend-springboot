@@ -21,4 +21,10 @@ public interface FileRepository extends JpaRepository <File, Long> {
     List<File> findByUserInAndFolderIsNull(List<User> accessibleUsers);
 
     Optional<File> findByFileName(String fileName);
+
+    boolean existsByUserAndFileName(User user, String s);
+
+    boolean existsByUserUserIdAndFileName(Long userId, String fileName);
+
+    List<File> findByUserUserId(Long userId);
 }
