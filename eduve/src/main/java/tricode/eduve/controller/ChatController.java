@@ -17,8 +17,9 @@ public class ChatController {
 
     @PostMapping("/start/{userId}")
     public ResponseEntity<MessageUnitDto> startConversation(@RequestBody MessageRequestDto requestDto,
-                                                            @PathVariable(name = "userId") Long userId) throws Exception {
-        return ResponseEntity.ok(chatService.startConversation(requestDto, userId));
+                                                            @PathVariable(name = "userId") Long userId,
+                                                            @RequestParam(name = "graph") Long graph) throws Exception {
+        return ResponseEntity.ok(chatService.startConversation(requestDto, userId, graph));
     }
 }
 

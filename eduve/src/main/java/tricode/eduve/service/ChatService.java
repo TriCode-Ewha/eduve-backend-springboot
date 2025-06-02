@@ -100,7 +100,7 @@ public class ChatService {
     }
 
 
-    public MessageUnitDto startConversation(MessageRequestDto requestDto, Long userId) throws Exception {
+    public MessageUnitDto startConversation(MessageRequestDto requestDto, Long userId, Long graph) throws Exception {
 
         String userMessage = requestDto.getQuestion();
 
@@ -142,9 +142,9 @@ public class ChatService {
         // 좋아요 분석이 있으면 chatGPT로 같이 보내기
         ResponseEntity<String> response;
         if (analysisResult != null && !analysisResult.isBlank()) {
-            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, analysisResult, fileInfo);
+            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, analysisResult, fileInfo, graph);
         } else {
-            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, null, fileInfo);
+            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, null, fileInfo, graph);
         }
         String parsedResponse = parseResponse(response);
 

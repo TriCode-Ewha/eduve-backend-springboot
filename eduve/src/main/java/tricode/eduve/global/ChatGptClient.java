@@ -27,7 +27,7 @@ public class ChatGptClient {
     RestTemplate restTemplate = new RestTemplate();
 
 
-    public ResponseEntity<String> chat(String question, String similarDocuments, Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
+    public ResponseEntity<String> chat(String question, String similarDocuments, Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo, Long graph) {
 
         HttpHeaders headers = new HttpHeaders(); // HTTP 헤더 생성
         headers.setContentType(MediaType.APPLICATION_JSON); // 요청 본문 타입 설정
@@ -37,7 +37,14 @@ public class ChatGptClient {
         JSONObject messageSystem = new JSONObject(); // 시스템 메시지 JSON 객체 생성
         messageSystem.put("role", "system");  // 역할 설정
 
-        String prompt = buildPrompt(similarDocuments, preference, messageLikeAnalysisResult, fileInfo);
+        String prompt = null;
+        if(graph == 0){
+            // 그래프 분석 아닐 경우
+            prompt = buildPrompt(similarDocuments, preference, messageLikeAnalysisResult, fileInfo);
+        }else{
+            // 그래프 분석일 경우
+            prompt = buildPromptWithGraph(preference, messageLikeAnalysisResult, fileInfo);
+        }
         messageSystem.put("content", prompt); // 시스템 메시지 추가
 
         JSONObject messageUser = new JSONObject(); // 사용자 메시지 JSON 객체 생성
@@ -102,6 +109,43 @@ public class ChatGptClient {
 
         return promptBuilder.toString();
     }
+
+
+
+    private String buildPromptWithGraph(Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
+
+        // 톤과 설명 수준에 맞는 프롬프트 설정
+        String toneInstruction = preference.getTone().getPromptInstruction();
+        String levelInstruction = preference.getDescriptionLevel().getPromptInstruction();
+
+        StringBuilder promptBuilder = new StringBuilder();
+
+        promptBuilder.append("너는 학생들에게 모르는 부분을 친절하게 설명해주는 학습 보조 챗봇이야.\n")
+                .append(toneInstruction).append("\n")
+                .append(levelInstruction).append("\n\n")
+                .append("질문에 답할 때는 반드시 제공된 '관련 문서'를 근거로 설명해야 해.\n")
+                .append("관련 문서에 없는 내용은 절대 추측하거나 지어내지 마.\n\n");
+
+        // 사용자의 좋아요 기반 분석 결과가 있으면 참고용으로 추가
+        if (messageLikeAnalysisResult != null && !messageLikeAnalysisResult.isBlank()) {
+            promptBuilder.append("또한 사용자가 선호하는 답변 스타일은 다음과 같아. 이를 참고해서 답변을 구성해줘:\n")
+                    .append(messageLikeAnalysisResult).append("\n\n");
+        }
+
+        if (fileInfo != null) {
+            String filePath = fileInfo.getFilePath();
+            String page = fileInfo.getPage();
+            String fileUrl = fileInfo.getFileUrl();
+
+            promptBuilder.append("다음은 관련 문서의 s3 url이야. 이 문서의 내용을 참고해.:\n")
+                    .append(filePath).append("', 관련 페이지는 ").append(page).append("이야. 사용과 질문과 관련된 표/그래프를 분석해서 대답해줘.\n")
+                    .append(fileUrl).append("\n");
+        }
+
+        return promptBuilder.toString();
+    }
+
+
 
 
     public String analyzeLikedMessages(List<String> likedMessages) {

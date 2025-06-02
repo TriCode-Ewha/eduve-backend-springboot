@@ -12,8 +12,8 @@ public class CorsMvcConfig implements WebMvcConfigurer {
         corsRegistry.addMapping("/**")
                 .allowedOrigins(
                         "http://localhost:3000",
-                        "https://generated-chaos-find-doctor.trycloudflare.com",
-                        "https://eduve-frontend-finale.vercel.app"
+                        "https://eduve-frontend-finale.vercel.app",
+                        "https://eduve-frontend.vercel.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
