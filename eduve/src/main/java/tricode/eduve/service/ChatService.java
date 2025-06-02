@@ -158,7 +158,7 @@ public class ChatService {
     // 유사도 검색 결과에서 파일 제목과 url 추출
     public FileInfoDto extractFirstFileInfo(String similarDocuments) throws Exception {
 
-        final double SCORE_THRESHOLD = 0.38;
+        final double SCORE_THRESHOLD = 0.3900;
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode root = objectMapper.readTree(similarDocuments);

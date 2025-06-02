@@ -48,7 +48,12 @@ public class File extends CreatedTimeEntity {
     private VoiceFile voice;
 
     public String getFullPath() {
-        return folder.getPath() + "/" + this.fileName;
+        if (this.folder == null || folder.getPath() == null || fileName == null) {
+            return "/" + fileName;
+        }
+        else{
+            return folder.getPath() + "/" + fileName;
+        }
     }
 
     public void setFileName(String fileName) {
