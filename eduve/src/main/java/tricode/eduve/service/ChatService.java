@@ -166,32 +166,46 @@ public class ChatService {
 
         // results가 배열이 아니거나 비어 있으면 null 반환
         if (!results.isArray() || results.isEmpty()) {
+            System.out.println("❌ results가 비어 있음");
             return null;
         }
 
         JsonNode firstResult = results.get(0);
         if (firstResult == null || firstResult.isEmpty()) {
+            System.out.println("❌ firstResult가 비어 있음");
             return null;
         }
 
         String fileName = firstResult.path("file_name").asText();
+        System.out.println("📄 fileName: " + fileName);
         if (fileName == null || fileName.isEmpty()) {
             return null;
         }
 
         // score 확인
         double score = firstResult.path("score").asDouble();
+        System.out.println("📊 score: " + score);
         if (score >= SCORE_THRESHOLD) {
+            System.out.println("⚠️ score threshold 초과");
             return null;
         }
 
         String page = firstResult.path("page").asText(); // 페이지 번호 문자열로 파싱
 
         Optional<File> file = fileRepository.findByFileName(fileName);
+        if (file.isEmpty()) {
+            System.out.println("❌ fileRepository에서 파일 없음");
+            return null;
+        }
+
         String url = file.map(File::getFileUrl).orElse(null);
 
         // filePath 추가
         String filePath = file.map(File::getFullPath).orElse(null);
+
+        System.out.println("🌐 url: " + url);
+        System.out.println("📂 filePath: " + filePath);
+
 
         return new FileInfoDto(fileName, page, url, filePath);
     }
