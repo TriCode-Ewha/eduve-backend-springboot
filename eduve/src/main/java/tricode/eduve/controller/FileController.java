@@ -39,6 +39,7 @@ public class FileController {
                     .body(null);
         }
     }
+
     // 일반 파일 업로드
     @PostMapping("/text")
     public ResponseEntity<FileUploadResponseDto> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("userId") Long userId, @RequestParam(value = "folderId", required = false) Long folderId) {
