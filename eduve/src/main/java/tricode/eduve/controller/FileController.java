@@ -47,7 +47,7 @@ public class FileController {
             FileResponseDto fileDto = fileUploadService.uploadFileToS3(file, userId, folderId);
 
             // 2. Flask로 파일 전달하여 임베딩 수행
-            String flaskResult = fileUploadService.embedDocument(file, userId);
+            String flaskResult = fileUploadService.embedDocument(file, fileDto.getFileName(), userId);
 
             // 3. 결과 합쳐서 JSON으로 반환
             FileUploadResponseDto responseDto = FileUploadResponseDto.builder()

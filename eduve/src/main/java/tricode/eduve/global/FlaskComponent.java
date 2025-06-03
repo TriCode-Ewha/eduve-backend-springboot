@@ -69,7 +69,7 @@ public class FlaskComponent {
     }
 
     // 임베딩 API 호출
-    public String embedDocument(MultipartFile file, Long userId) throws IOException {
+    public String embedDocument(MultipartFile file, String filename, Long userId) throws IOException {
         String url = "http://54.180.121.68:5000/embedding";
         //String url = "http://localhost:5000/embedding";
 
@@ -77,9 +77,10 @@ public class FlaskComponent {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new MultipartInputStreamFileResource(file.getInputStream(), file.getOriginalFilename()));
+
+        body.add("file", new MultipartInputStreamFileResource(file.getInputStream(), filename));
         body.add("userId", userId.toString());  // user_id를 form-data에 추가
-        body.add("title", file.getOriginalFilename()); // filename을 from-data에 추가
+        body.add("title", filename); // filename을 from-data에 추가
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 

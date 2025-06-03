@@ -34,6 +34,7 @@ public class FileUploadService {
     private final FolderRepository folderRepository;
     private final FlaskComponent flaskComponent;
     private final DagloSTTService dagloSTTService;
+    private final FileService fileService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -130,7 +131,7 @@ public class FileUploadService {
         FileResponseDto textFileInfo = uploadFileToS3(textMultipartFile, userId, folderId);
 
         // 5. Flask 임베딩 호출
-        String flaskResult = embedDocument(textMultipartFile, userId);
+        String flaskResult = embedDocument(textMultipartFile, textFileInfo.getFileName(), userId);
 
         return FileUploadResponseDto.builder()
                 .fileInfo(List.of(audioFileInfo, textFileInfo))
@@ -219,8 +220,8 @@ public class FileUploadService {
         return FileResponseDto.from(fileEntity, userId + "^");
     }
 
-    public String embedDocument(MultipartFile file, Long userId) throws IOException {
-        return flaskComponent.embedDocument(file, userId);
+    public String embedDocument(MultipartFile file, String fileName, Long userId) throws IOException {
+        return flaskComponent.embedDocument(file, fileName, userId);
     }
 
     private java.io.File convertMultipartToFile(MultipartFile file) throws IOException {
