@@ -191,12 +191,12 @@ public class ChatService {
         }
 
         // score 확인
-        double score = firstResult.path("score").asDouble();
-        log.info("📊 score: {}", score);
-        if (score >= SCORE_THRESHOLD) {
-            log.warn("⚠️ score threshold 초과");
-            return null;
-        }
+//        double score = firstResult.path("score").asDouble();
+//        log.info("📊 score: {}", score);
+//        if (score >= SCORE_THRESHOLD) {
+//            log.warn("⚠️ score threshold 초과");
+//            return null;
+//        }
 
         String page = firstResult.path("page").asText(); // 페이지 번호 문자열로 파싱
 

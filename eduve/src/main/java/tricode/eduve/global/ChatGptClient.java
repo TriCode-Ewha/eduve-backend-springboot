@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.*;
 
@@ -228,7 +229,8 @@ public class ChatGptClient {
 
     private String uploadFileToOpenAI(String fileUrl) throws Exception {
         //주어진 fileUrl(예: presigned S3 URL)로 HTTP GET 요청을 설정합니다.
-        URL url = new URL(fileUrl);
+        URI uri = new URI(fileUrl); // 인코딩 손상 없이 보존
+        URL url = uri.toURL();
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
