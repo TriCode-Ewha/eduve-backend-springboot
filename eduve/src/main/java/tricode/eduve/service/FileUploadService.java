@@ -190,12 +190,12 @@ public class FileUploadService {
 
         String newFileName = baseName + "." + extension;
         int count = 1;
-        while (fileRepository.existsByUserAndFileName(user, userId + "^" + newFileName)) {
+        while (fileRepository.existsByUserAndFileName(user, userId + "/" + newFileName)) {
             count++;
             newFileName = baseName + count + "." + extension;
         }
 
-        String storedFileName = userId + "^" + newFileName;
+        String storedFileName = userId + "/" + newFileName;
         String fileUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + storedFileName;
 
         // S3에 업로드
@@ -207,7 +207,7 @@ public class FileUploadService {
 
         // File 엔티티 생성 및 저장
         File fileEntity = File.builder()
-                .fileName(storedFileName)  // DB에는 userId^파일명 저장
+                .fileName(storedFileName)  // DB에는 userId/파일명 저장
                 .fileType(fileType)
                 .fileUrl(fileUrl)
                 .user(user)
@@ -216,8 +216,8 @@ public class FileUploadService {
 
         fileRepository.save(fileEntity);
 
-        // 프론트에는 userId^ 제거해서 반환
-        return FileResponseDto.from(fileEntity, userId + "^");
+        // 프론트에는 userId/ 제거해서 반환
+        return FileResponseDto.from(fileEntity, userId + "/");
     }
 
     public String embedDocument(MultipartFile file, String fileName, Long userId) throws IOException {

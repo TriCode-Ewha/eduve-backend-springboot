@@ -78,7 +78,7 @@ public class FlaskComponent {
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
-        String S3filename = userId + "^" + filename;
+        String S3filename = userId + "/" + filename;
 
         body.add("file", new MultipartInputStreamFileResource(file.getInputStream(), S3filename));
         body.add("userId", userId.toString());  // user_id를 form-data에 추가

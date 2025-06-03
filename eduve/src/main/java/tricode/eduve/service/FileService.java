@@ -26,8 +26,8 @@ public class FileService {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new IllegalArgumentException("파일을 찾을 수 없습니다."));
 
-        // 접두어 (userId^)
-        String prefix = file.getUser().getUserId() + "^";
+        // 접두어 (userId/)
+        String prefix = file.getUser().getUserId() + "/";
 
         // Dto 변환 후 반환
         return FileResponseDto.from(file, prefix);
@@ -60,14 +60,14 @@ public class FileService {
 
         return allFiles.stream()
                 .filter(file -> {
-                    String prefix = file.getUser().getUserId() + "^";
+                    String prefix = file.getUser().getUserId() + "/";
                     String cleanFileName = file.getFileName().startsWith(prefix)
                             ? file.getFileName().substring(prefix.length())
                             : file.getFileName();
                     return cleanFileName.toLowerCase().contains(keyword.toLowerCase());
                 })
                 .map(file -> {
-                    String prefix = file.getUser().getUserId() + "^";
+                    String prefix = file.getUser().getUserId() + "/";
                     return FileResponseDto.from(file, prefix);
                 })
                 .collect(Collectors.toList());
@@ -80,13 +80,13 @@ public class FileService {
 //
 //        return userFiles.stream()
 //                .filter(file -> {
-//                    String prefix = userId + "^";
+//                    String prefix = userId + "/";
 //                    String cleanFileName = file.getFileName().startsWith(prefix)
 //                            ? file.getFileName().substring(prefix.length())
 //                            : file.getFileName();
 //                    return cleanFileName.toLowerCase().contains(keyword.toLowerCase());
 //                })
-//                .map(file -> FileResponseDto.from(file, userId + "^"))
+//                .map(file -> FileResponseDto.from(file, userId + "/"))
 //                .collect(Collectors.toList());
 //    }
 
@@ -116,7 +116,7 @@ public class FileService {
         }
 
         // 접두어
-        String prefix = userId + "^";
+        String prefix = userId + "/";
         String uniqueFileName = baseName + "." + extension;
         String finalFileName = prefix + uniqueFileName;
         int counter = 2;
@@ -143,7 +143,7 @@ public class FileService {
 
         file.setFolder(newFolder);
 
-        String prefix = file.getUser().getUserId() + "^";
+        String prefix = file.getUser().getUserId() + "/";
         return FileResponseDto.from(file, prefix);
     }
 }
