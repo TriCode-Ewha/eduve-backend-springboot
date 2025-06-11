@@ -45,10 +45,16 @@ public class ChatGptClient {
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON)); // 수신할 응답 타입 설정
             headers.set("Authorization", "Bearer " + API_KEY); // 인증 헤더에 API 키 추가
 
+
+            String prompt = buildPrompt(question,
+                    similarDocuments,
+                    preference,
+                    messageLikeAnalysisResult,
+                    fileInfo);
+
+
             JSONObject messageSystem = new JSONObject(); // 시스템 메시지 JSON 객체 생성
             messageSystem.put("role", "system");  // 역할 설정
-
-            String prompt =  buildPrompt(similarDocuments, preference, messageLikeAnalysisResult, fileInfo);
             messageSystem.put("content", prompt); // 시스템 메시지 추가
 
             JSONObject messageUser = new JSONObject(); // 사용자 메시지 JSON 객체 생성
@@ -85,7 +91,11 @@ public class ChatGptClient {
             headers.set("OpenAI-Beta", "assistants=v2");
 
             // Assistant API 방식 전환 (그래프 분석용)
-            String prompt = buildPromptWithGraph(preference, messageLikeAnalysisResult, fileInfo);
+            //String prompt = buildPromptWithGraph(preference, messageLikeAnalysisResult, fileInfo);
+            String prompt = buildPromptWithGraph(question,
+                    preference,
+                    messageLikeAnalysisResult,
+                    fileInfo);
             String fileUrl = fileInfo.getFileUrl();
             String fileId;
 
@@ -263,64 +273,182 @@ public class ChatGptClient {
         }
     }
 
-    private String buildPrompt(String similarDocuments, Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
+    private String buildPrompt(String question, String similarDocuments, Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
 
         // 톤과 설명 수준에 맞는 프롬프트 설정
         String toneInstruction = preference.getTone().getPromptInstruction();
         String levelInstruction = preference.getDescriptionLevel().getPromptInstruction();
 
-        StringBuilder promptBuilder = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
-        promptBuilder.append("너는 학생들에게 모르는 부분을 친절하게 설명해주는 학습 보조 챗봇이야.\n")
-                .append(toneInstruction).append("\n")
-                .append(levelInstruction).append("\n\n")
-                .append("질문에 답할 때는 반드시 제공된 '관련 문서'를 근거로 설명해야 해.\n")
-                .append("관련 문서에 없는 내용은 절대 추측하거나 지어내지 마.\n\n");
+        /* 1. 시스템 역할 */
+        sb.append("[시스템 역할]\n")
+                .append("너는 학생들에게 모르는 부분을 친절하고 명확하게 설명해주는 학습 보조 챗봇이야.\n\n");
 
-        // 사용자의 좋아요 기반 분석 결과가 있으면 참고용으로 추가
+        /* 2. 톤 & 설명 수준 */
+        sb.append("[톤(Tone) 및 설명 수준(Level) 지시문]\n")
+                .append(" - 톤 지시문: ").append(toneInstruction).append("\n")
+                .append(" - 설명 수준 지시문: ").append(levelInstruction).append("\n\n");
+
+        /* 3. 중요 규칙 */
+        sb.append("[중요 규칙]\n")
+                .append(" 1) 질문에 답할 때는 반드시 제공된 '관련 문서'를 근거로 설명해야 한다.\n")
+                .append(" 2) 관련 문서에 없는 내용은 절대 추측하거나 지어내지 않아야 한다.\n\n");
+
+        /* 4. 문서 정보 (옵션) */
+        if (fileInfo != null && fileInfo.getFilePath() != null && fileInfo.getPage() != null) {
+            sb.append("[문서 정보]\n")
+                    .append(" - 문서 경로: '").append(fileInfo.getFilePath()).append("'\n")
+                    .append(" - 관련 페이지: ").append(fileInfo.getPage()).append("\n")
+                    .append(" (※ 사용자가 문서 위치나 접근 방법을 묻는다면 이 정보를 활용하여 안내하세요)\n\n");
+        }
+
+        /* 5. 사용자 선호 정보 */
         if (messageLikeAnalysisResult != null && !messageLikeAnalysisResult.isBlank()) {
-            promptBuilder.append("또한 사용자가 선호하는 답변 스타일은 다음과 같아. 이를 참고해서 답변을 구성해줘:\n")
+            sb.append("[추가 사용자 선호 정보]\n")
                     .append(messageLikeAnalysisResult).append("\n\n");
         }
 
-        if (fileInfo != null) {
-            String filePath = fileInfo.getFilePath();
-            String page = fileInfo.getPage();
+        /* 6. 관련 문서 본문 */
+        sb.append("[관련 문서 본문]\n")
+                .append(Optional.ofNullable(similarDocuments).orElse("(관련 문서 미제공)"))
+                .append("\n\n");
 
-            promptBuilder.append("이 질문과 관련된 문서는 다음 경로에 있어: '")
-                    .append(filePath).append("', 관련 페이지는 ").append(page).append("이야.\n");
-            promptBuilder.append("만약 사용자가 문서의 위치나 접근 방법을 묻는다면 이 정보를 활용해서 답변해줘.\n\n");
-        }
+        /* 7. 질문 유형 분류 고정 안내 */
+        sb.append("[질문 유형 분류]\n")
+                .append(" • 질문이 “내용(Meaning) 기반 설명”인지, “위치(Location) 기반 정보” 요청인지 파악한다.  \n")
+                .append("   – **내용 기반 설명 질문**:  \n")
+                .append("     예시) “ΔU = Q – W 유도 과정을 단계별로 설명해 주세요.”  \n")
+                .append("     → 이 경우 문서 본문을 근거로 **구조화된 설명**(예: 개념 정의, 유도 과정, 예시 적용)을 제공해야 한다.  \n\n")
+                .append("   – **위치 기반 질문**:  \n")
+                .append("     예시) “‘열역학 제1법칙’ 정의 부분이 문서 어디에 있나요?”  \n")
+                .append("     → 이 경우 문서에서 해당 키워드(‘열역학 제1법칙’)가 포함된 **페이지 번호 또는 섹션**을 정확히 찾아 안내해야 한다.  \n\n")
+                .append("   – **혼합형 질문**:  \n")
+                .append("     예시) “‘열역학 제1법칙’이 정의된 부분을 23~25쪽에서 찾아 설명해 주세요.”  \n")
+                .append("     → 먼저 위치(23~25쪽)를 안내한 뒤, 해당 위치를 근거로 **내용 기반 설명**을 함께 제공한다.\n\n");
 
-        promptBuilder.append("다음은 관련 문서야:\n")
-                .append(similarDocuments).append("\n");
+        /* 8. 질문 원문 */
+        sb.append("[질문]\n")
+                .append(question)
+                .append("\n\n");
 
-        return promptBuilder.toString();
+        /* 9. 예상 답변 형식 */
+        sb.append("[예상 답변 형식]\n")
+                .append("   1) **내용 기반 설명 질문일 때**  \n")
+                .append("      • 도입부: 간단한 인사 및 답변 의도 언급  \n")
+                .append("      • 본문:  \n")
+                .append("        ① 개념 정의  \n")
+                .append("        ② 공식/이론 유도 과정  \n")
+                .append("        ③ 구체적인 예시 적용  \n")
+                .append("      • 결론부: 핵심 요약 및 추가 학습 팁 제공  \n\n")
+                .append("   2) **위치 기반 질문일 때**  \n")
+                .append("      • 도입부: 간단한 인사 및 답변 의도 언급  \n")
+                .append("      • 본문:  \n")
+                .append("        ① 문서 파일명 및 페이지 번호(또는 섹션) 안내  \n")
+                .append("        ② 해당 위치에서 찾을 수 있는 키워드 또는 문장 인용  \n")
+                .append("      • 결론부: 추가로 확인할 수 있는 문서 내 인접 섹션 안내  \n\n")
+                .append("   3) **혼합형 질문일 때**  \n")
+                .append("      • 도입부: 간단한 인사 및 답변 의도 언급  \n")
+                .append("      • 본문:  \n")
+                .append("        ① 위치 안내  \n")
+                .append("        ② 해당 위치를 근거로 내용 설명(①, ②, ③ 단계)  \n")
+                .append("      • 결론부: 핵심 요약 및 추가 학습 팁 제공  \n\n")
+                .append("   ---------------------------------------------\n")
+                .append("   [예시 답변 시작]\n")
+                .append("   안녕하세요! 질문하신 내용을 차례대로 설명드리겠습니다.\n")
+                .append("   ... (예시 답변 생략) ...\n")
+                .append("   [예시 답변 끝]\n")
+                .append("   ---------------------------------------------\n");
+
+        return sb.toString();
     }
 
 
 
-    private String buildPromptWithGraph(Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
+    private String buildPromptWithGraph(String question, Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
 
         // 톤과 설명 수준에 맞는 프롬프트 설정
         String toneInstruction = preference.getTone().getPromptInstruction();
         String levelInstruction = preference.getDescriptionLevel().getPromptInstruction();
 
-        StringBuilder promptBuilder = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
-        promptBuilder.append("너는 학생들에게 모르는 부분을 친절하게 설명해주는 학습 보조 챗봇이야.\n")
-                .append(toneInstruction).append("\n")
-                .append(levelInstruction).append("\n\n")
-                .append("질문에 답할 때는 반드시 제공된 '관련 문서'를 근거로 설명해야 해.\n")
-                .append("관련 문서에 없는 내용은 절대 추측하거나 지어내지 마.\n\n")
-                .append("이야. 사용과 질문과 관련된 표/그래프를 분석해서 대답해줘.\n");
+        /* 1. 시스템 역할 */
+        sb.append("[시스템 역할]\n")
+                .append("너는 학생들에게 모르는 부분을 친절하고 명확하게 설명해주는 학습 보조 챗봇이야.\n\n");
 
-        // 사용자의 좋아요 기반 분석 결과가 있으면 참고용으로 추가
+        /* 2. 톤 & 설명 수준 */
+        sb.append("[톤(Tone) 및 설명 수준(Level) 지시문]\n")
+                .append(" - 톤 지시문: ").append(toneInstruction).append("\n")
+                .append(" - 설명 수준 지시문: ").append(levelInstruction).append("\n\n");
+
+        /* 3. 중요 규칙 */
+        sb.append("[중요 규칙]\n")
+                .append(" 1) 질문에 답할 때는 반드시 제공된 '관련 문서'를 근거로 설명해야 한다.\n")
+                .append(" 2) 관련 문서에 없는 내용은 절대 추측하거나 지어내지 않아야 한다.\n\n")
+                .append(" 3) 파일에서 사용과 질문과 관련된 표/그래프를 분석해서 대답해야한다.\n\n");
+
+        /* 4. 문서 정보 (옵션) */
+        if (fileInfo != null && fileInfo.getFilePath() != null && fileInfo.getPage() != null) {
+            sb.append("[문서 정보]\n")
+                    .append(" - 문서 경로: '").append(fileInfo.getFilePath()).append("'\n")
+                    .append(" - 관련 페이지: ").append(fileInfo.getPage()).append("\n")
+                    .append(" (※ 사용자가 문서 위치나 접근 방법을 묻는다면 이 정보를 활용하여 안내하세요)\n\n");
+        }
+
+        /* 5. 사용자 선호 정보 */
         if (messageLikeAnalysisResult != null && !messageLikeAnalysisResult.isBlank()) {
-            promptBuilder.append("또한 사용자가 선호하는 답변 스타일은 다음과 같아. 이를 참고해서 답변을 구성해줘:\n")
+            sb.append("[추가 사용자 선호 정보]\n")
                     .append(messageLikeAnalysisResult).append("\n\n");
         }
-        return promptBuilder.toString();
+
+        /* 7. 질문 유형 분류 고정 안내 */
+        sb.append("[질문 유형 분류]\n")
+                .append(" • 질문이 “내용(Meaning) 기반 설명”인지, “위치(Location) 기반 정보” 요청인지 파악한다.  \n")
+                .append("   – **내용 기반 설명 질문**:  \n")
+                .append("     예시) “ΔU = Q – W 유도 과정을 단계별로 설명해 주세요.”  \n")
+                .append("     → 이 경우 문서 본문을 근거로 **구조화된 설명**(예: 개념 정의, 유도 과정, 예시 적용)을 제공해야 한다.  \n\n")
+                .append("   – **위치 기반 질문**:  \n")
+                .append("     예시) “‘열역학 제1법칙’ 정의 부분이 문서 어디에 있나요?”  \n")
+                .append("     → 이 경우 문서에서 해당 키워드(‘열역학 제1법칙’)가 포함된 **페이지 번호 또는 섹션**을 정확히 찾아 안내해야 한다.  \n\n")
+                .append("   – **혼합형 질문**:  \n")
+                .append("     예시) “‘열역학 제1법칙’이 정의된 부분을 23~25쪽에서 찾아 설명해 주세요.”  \n")
+                .append("     → 먼저 위치(23~25쪽)를 안내한 뒤, 해당 위치를 근거로 **내용 기반 설명**을 함께 제공한다.\n\n");
+
+        /* 8. 질문 원문 */
+        sb.append("[질문]\n")
+                .append(question)
+                .append("\n\n");
+
+        /* 9. 예상 답변 형식 */
+        sb.append("[예상 답변 형식]\n")
+                .append("   1) **내용 기반 설명 질문일 때**  \n")
+                .append("      • 도입부: 간단한 인사 및 답변 의도 언급  \n")
+                .append("      • 본문:  \n")
+                .append("        ① 개념 정의  \n")
+                .append("        ② 공식/이론 유도 과정  \n")
+                .append("        ③ 구체적인 예시 적용  \n")
+                .append("      • 결론부: 핵심 요약 및 추가 학습 팁 제공  \n\n")
+                .append("   2) **위치 기반 질문일 때**  \n")
+                .append("      • 도입부: 간단한 인사 및 답변 의도 언급  \n")
+                .append("      • 본문:  \n")
+                .append("        ① 문서 파일명 및 페이지 번호(또는 섹션) 안내  \n")
+                .append("        ② 해당 위치에서 찾을 수 있는 키워드 또는 문장 인용  \n")
+                .append("      • 결론부: 추가로 확인할 수 있는 문서 내 인접 섹션 안내  \n\n")
+                .append("   3) **혼합형 질문일 때**  \n")
+                .append("      • 도입부: 간단한 인사 및 답변 의도 언급  \n")
+                .append("      • 본문:  \n")
+                .append("        ① 위치 안내  \n")
+                .append("        ② 해당 위치를 근거로 내용 설명(①, ②, ③ 단계)  \n")
+                .append("      • 결론부: 핵심 요약 및 추가 학습 팁 제공  \n\n")
+                .append("   ---------------------------------------------\n")
+                .append("   [예시 답변 시작]\n")
+                .append("   안녕하세요! 질문하신 내용을 차례대로 설명드리겠습니다.\n")
+                .append("   ... (예시 답변 생략) ...\n")
+                .append("   [예시 답변 끝]\n")
+                .append("   ---------------------------------------------\n");
+
+        return sb.toString();
     }
 
 

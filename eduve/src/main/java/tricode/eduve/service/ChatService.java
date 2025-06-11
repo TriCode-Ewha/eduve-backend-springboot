@@ -101,7 +101,7 @@ public class ChatService {
     }
 
 
-    public MessageUnitDto startConversation(MessageRequestDto requestDto, Long userId, Long graph) throws Exception {
+    public MessageUnitDto startConversation(MessageRequestDto requestDto, Long userId, Long graph, Long url) throws Exception {
 
         String userMessage = requestDto.getQuestion();
 
@@ -129,8 +129,11 @@ public class ChatService {
             similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, null);
         }
 
-        // 유사도검색 결과에서 파일명 추출해서 파일 url 반환
-        FileInfoDto fileInfo = extractFirstFileInfo(similarDocuments);
+        FileInfoDto fileInfo = null;
+        if(url == 1L){
+            // 유사도검색 결과에서 파일명 추출해서 파일 url 반환
+            fileInfo = extractFirstFileInfo(similarDocuments);
+        }
 
         // 사용자가 설정한 TONE/DISCRIPTIONLEVEL 조회
         Preference userPreference = userCharacterService.getPrefernceByUserId(userId); // tone, explanationLevel 포함
@@ -191,12 +194,12 @@ public class ChatService {
         }
 
         // score 확인
-//        double score = firstResult.path("score").asDouble();
-//        log.info("📊 score: {}", score);
-//        if (score >= SCORE_THRESHOLD) {
-//            log.warn("⚠️ score threshold 초과");
-//            return null;
-//        }
+        double score = firstResult.path("score").asDouble();
+        log.info("📊 score: {}", score);
+        if (score >= SCORE_THRESHOLD) {
+            log.warn("⚠️ score threshold 초과");
+            return null;
+        }
 
         String page = firstResult.path("page").asText(); // 페이지 번호 문자열로 파싱
 
