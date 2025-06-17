@@ -25,7 +25,7 @@ public class FlaskComponent {
 
     // 유사도 검색 flask API 호출
     public String findSimilarDocuments(String question, Long userId, User teacher) {
-        String flaskApiUrl = "http://54.180.121.68:5000/search";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
+        String flaskApiUrl = "http://172.31.45.158:5000/search";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
         //String flaskApiUrl = "http://localhost:5000/search";
 
         // 요청 헤더 설정
@@ -53,7 +53,7 @@ public class FlaskComponent {
     }
 
     public String extractTopic(String userMessage) {
-        String flaskApiUrl = "http://54.180.121.68:5000/extractTopic";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
+        String flaskApiUrl = "http://172.31.45.158:5000/extractTopic";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
         //String flaskApiUrl = "http://localhost:5000/extractTopic";
 
         ResponseEntity<Map> response = restTemplate.postForEntity(flaskApiUrl, Map.of("message", userMessage), Map.class);
@@ -61,7 +61,7 @@ public class FlaskComponent {
     }
 
     public double calculateSimilarity(String lastTopic, String newTopic) {
-        String flaskApiUrl = "http://54.180.121.68:5000/calculateSimilarity";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
+        String flaskApiUrl = "http://172.31.45.158:5000/calculateSimilarity";  // Flask API URL (로컬에서 Flask 실행 중이라면 localhost 사용)
         //String flaskApiUrl = "http://localhost:5000/calculateSimilarity";
 
         ResponseEntity<Map> response = restTemplate.postForEntity(flaskApiUrl, Map.of("topic1", lastTopic, "topic2", newTopic), Map.class);
@@ -70,7 +70,7 @@ public class FlaskComponent {
 
     // 임베딩 API 호출
     public String embedDocument(MultipartFile file, String filename, Long userId) throws IOException {
-        String url = "http://54.180.121.68:5000/embedding";
+        String url = "http://172.31.45.158:5000/embedding";
         //String url = "http://localhost:5000/embedding";
 
         HttpHeaders headers = new HttpHeaders();
