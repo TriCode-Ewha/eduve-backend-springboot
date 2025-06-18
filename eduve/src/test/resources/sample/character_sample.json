@@ -1,0 +1,22 @@
+[
+  {
+    "userCharacterName": "공감형 조언자",
+    "tone": "FRIENDLY",
+    "descriptionLevel": "EASY"
+  },
+  {
+    "userCharacterName": "논리적 안내자",
+    "tone": "FORMAL",
+    "descriptionLevel": "EXPERT"
+  },
+  {
+    "userCharacterName": "친절한 설명가",
+    "tone": "KINDLY",
+    "descriptionLevel": "MIDDLE"
+  },
+  {
+    "userCharacterName": "츤데레 선배",
+    "tone": "TSUNDERE",
+    "descriptionLevel": "HIGH"
+  }
+]

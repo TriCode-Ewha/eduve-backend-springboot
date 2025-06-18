@@ -1,6 +1,6 @@
-# Eduve: RAG 기반 AI 챗봇 서비스
+# Edu've: RAG 기반 AI 챗봇 서비스
 
-Eduve는 음성 인식(STT), OCR 문자 추출, 채팅 메시지 저장 등 기능을 제공하는 Spring Boot 기반의 교육 지원 백엔드 서버입니다. 이 프로젝트는 JWT 인증과 RESTful API를 기반으로 하며, 학생과 교사 간 커뮤니케이션을 지원합니다.
+Edu've는 RAG(Retrieval-Augmented Generation) 기반의 AI 챗봇 학습 지원 서비스로, 강사와 수강생 문서 기반 질문 응답을 지원합니다. 학습자료 아카이빙, 개인 맞춤형 챗봇, 실시간 질의응답 기능을 포함하며, Spring Boot와 Flask로 백엔드를 구성하고 React 기반 웹 인터페이스를 제공합니다. 학습 환경에서의 커뮤니케이션과 정보 접근성을 향상시키는 것을 목표로 합니다.
 
 <br>
 <br>
@@ -104,7 +104,7 @@ eduve/
 git clone https://github.com/TriCode-Ewha/eduve-backend-springboot.git
 cd eduve-backend-springboot
 
-# 2. application.yml 설정
+# 2. application.yml 설정 -> 아래 Database 사용 정보 참고
 cp src/main/resources/application-example.yml src/main/resources/application.yml
 # 설정 후 DB URL, 사용자 정보, JWT 시크릿 등을 입력
 
@@ -147,43 +147,114 @@ sh scripts/start.sh
 이 프로젝트는 JUnit 5 및 Spring Boot Test를 기반으로 테스트를 수행합니다.
 
 #### 테스트 실행
+프로젝트를 클론받은 뒤, 아래 방법으로 Test 실행
+- 주의 : flask 서버가 로컬에서 돌아가는 상태에서 Test 가능
 ```bash
 ./gradlew test
 ```
-또는 IntelliJ에서 src/test/java/.../controller/ 또는 /service/ 내 테스트 클래스 실행
+IntelliJ에서 src/test/java/.../controller/ 내 테스트 클래스 실행
 
 #### 테스트 구조
 | 디렉토리 경로                         | 설명            |
 | ------------------------------- | ------------- |
 | `src/test/java/.../controller/` | API 컨트롤러 테스트  |
-| `src/test/java/.../service/`    | 서비스 로직 단위 테스트 |
 
 
-#### ✨ 테스트 예시: 채팅 시작 API
+### 1. 채팅 시작 테스트
 
 **대상 API: POST /chat/start/{userId}**
+**설명: 사용자의 질문을 입력하면, 설정된 캐릭터 말투 및 설명 난이도에 맞춰 챗봇이 응답합니다.**
 
 **입력 예시:**
 
 ```json
 {
-  "question": "안녕하세요"
+  "question": "안녕하세요."
 }
 ```
 
 **검증 포인트:**
-- Bot 응답 메시지 존재
-- 상태 코드 200 OK
+- 상태 코드: 200 OK
+- userMessage.question 필드가 입력값과 동일한지 확인
+- botMessage.answer 필드가 비어 있지 않은지 확인 (GPT 응답 존재 여부)
 
 **테스트 코드 (일부)**
 ```java
-mockMvc.perform(post("/chat/start/1")
-    .param("graph", "1")
-    .param("url", "123")
-    .contentType(MediaType.APPLICATION_JSON)
-    .content("{\"question\": \"안녕하세요\"}"))
+mockMvc.perform(post("/chat/start/2")
+        .param("graph", "0")
+        .param("url", "0")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"question\": \"안녕하세요.\"}"))
     .andExpect(status().isOk())
-    .andExpect(jsonPath("$.botMessage.message").exists());
+    .andExpect(jsonPath("$.userMessage.question").value("안녕하세요."))
+    .andExpect(jsonPath("$.botMessage.answer").isNotEmpty());
+```
+
+**위치 기반 / 내용 기반 응답 테스트**
+이 프로젝트는 질문 입력 시, 다음 두 방식으로 챗봇 응답의 정확도를 검증할 수 있습니다:
+| 유형        | 설명                                                     |
+| --------- | ------------------------------------------------------ |
+| **위치 기반** | 질문에 대해 응답이 올바른 문서의 `파일명`과 `페이지 번호`에서 추출되었는지를 테스트       |
+| **내용 기반** | 질문에 대해 응답 문장 자체가 예상한 의미를 포함하는지를 비교 (정답 메시지 일부 포함 여부 등) |
+
+<br>
+
+### 2. 캐릭터 설정 반영 테스트
+
+**대상 API: PATCH /userCharacter/{userId}**
+**설명: 사용자별 캐릭터 말투(tone)와 설명 난이도(descriptionLevel)를 변경하고, 해당 설정이 챗봇 응답에 반영되는지 확인합니다.**
+
+**입력 예시:**
+
+```json
+{
+  "userCharacterName": "공감형 조언자",
+  "tone": "FRIENDLY",
+  "descriptionLevel": "HIGH"
+}
+```
+- 사용자 캐릭터 설정 요청 시 tone과 descriptionLevel 필드는 아래 값 중 하나를 사용할 수 있습니다.
+- **Tone (말투)**
+
+  | 값          | 설명                     |
+  | ---------- | ---------------------- |
+  | `FORMAL`   | 격식 있는 말투               |
+  | `KINDLY`   | 친절하고 공손한 말투            |
+  | `FRIENDLY` | 캐주얼하고 다정한 말투           |
+  | `TSUNDERE` | 퉁명스럽지만 챙겨주는 말투 (*츤데레*) |
+
+- **DescriptionLevel (설명 난이도)**
+
+  | 값            | 설명                |
+  | ------------ | ----------------- |
+  | `ELEMENTARY` | 초등학생도 이해할 수 있는 수준 |
+  | `MIDDLE`     | 중학생 수준의 설명        |
+  | `HIGH`       | 고등학생 수준의 설명       |
+  | `UNIVERSITY` | 대학생 수준의 상세 설명     |
+  | `EXPERT`     | 전문가 수준의 심화 설명     |
+
+
+**검증 포인트:**
+- 상태 코드 200 OK
+- 응답 본문에 변경된 속성 반영 여부
+
+**연계 테스트 흐름**
+1. 캐릭터 설정 변경 요청
+2. 변경된 캐릭터 상태 확인 (userCharacterName, tone, descriptionLevel)
+3. 채팅 요청 → 응답이 해당 캐릭터 설정을 반영하고 있는지 확인
+
+
+**테스트 코드 (일부)**
+```java
+mockMvc.perform(patch("/user-character/2")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{"
+            + "\"userCharacterName\": \"공감형 조언자\","
+            + "\"tone\": \"FRIENDLY\","
+            + "\"descriptionLevel\": \"EASY\""
+            + "}"))
+    .andExpect(status().isOk())
+    .andExpect(jsonPath("$.userCharacterName").value("공감형 조언자"));
 ```
 
 
@@ -193,35 +264,30 @@ mockMvc.perform(post("/chat/start/1")
 ## 📊 샘플 데이터 설명
 프로젝트에는 API 테스트용 샘플 데이터가 포함되어 있습니다.
 
-#### 1. 사용자 데이터 (users.csv)
-- 위치: src/main/resources/sample/users.csv
-- 형식: CSV
-```csv
-id,username,password,role
-1,teacher01,password123,ROLE_TEACHER
-2,student01,password456,ROLE_STUDENT
-```
 
-#### 2. 채팅 메시지 샘플 (messages.json)
-- 위치: src/main/resources/sample/messages.json
+#### 1. 캐릭터 설정 (character_sample.json)
+- 위치: src/main/resources/sample/character_sample.json
 - 형식: JSON
 
 ```json
 [
   {
-    "sender": "student01",
-    "receiver": "teacher01",
-    "message": "안녕하세요 선생님!",
-    "timestamp": "2024-06-01T10:00:00"
+    "userCharacterName": "공감형 조언자",
+    "tone": "FRIENDLY",
+    "descriptionLevel": "EASY"
   },
+
   {
-    "sender": "teacher01",
-    "receiver": "student01",
-    "message": "네, 어떤 도움이 필요하신가요?",
-    "timestamp": "2024-06-01T10:01:00"
+    "userCharacterName": "논리적 안내자",
+    "tone": "FORMAL",
+    "descriptionLevel": "EXPERT"
   }
 ]
 ```
+- 다양한 캐릭터 설정(tone, 설명 난이도 등)을 테스트할 수 있는 샘플 데이터입니다.
+- 테스트 코드에서는 이 JSON을 참고해 직접 설정 값을 지정해 PATCH /user-character/{userId} API로 캐릭터를 변경하고,
+이후 POST /chat/start/{userId}를 통해 챗봇의 응답에 캐릭터 말투가 잘 반영되는지를 확인할 수 있습니다.
+- 이 파일을 기반으로 다양한 캐릭터 설정을 반복적으로 바꿔가며 테스트하는 데 유용합니다.
 
 <br>
 <br>
@@ -229,7 +295,7 @@ id,username,password,role
 
 ## 🗄 Database 사용 정보
 - DBMS: MySQL
-- 설정 예시 (application.yml):
+- application.yml:
 
 ``` yaml
 spring:
