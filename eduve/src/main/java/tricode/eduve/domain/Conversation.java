@@ -46,7 +46,7 @@ public class Conversation extends CreatedTimeEntity {
         updatedTime = LocalDateTime.now();
     }
 
-    // 메시지 추가 메서드
+    // 메시지 추가 메서드 please..
     public void addMessage(Message message) {
         message.setConversation(this);  
         this.messages.add(message);
