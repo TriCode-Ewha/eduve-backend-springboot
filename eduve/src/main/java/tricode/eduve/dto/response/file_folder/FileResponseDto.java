@@ -35,6 +35,7 @@ public class FileResponseDto {
                 .folderId(file.getFolder() != null ? file.getFolder().getFolderId() : null)
                 .role(file.getUser().getRole()) // 롤값 같이 전달
                 .username(file.getUser().getUsername())
+                .content(file.getContent())
                 .build();
     }
 }
