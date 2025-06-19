@@ -178,8 +178,6 @@ public class ChatService {
     // 유사도 검색 결과에서 파일 제목과 url 추출
     public FileInfoDto extractFirstFileInfo(String similarDocuments) throws Exception {
 
-        final double SCORE_THRESHOLD = 0.4300;
-
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode root = objectMapper.readTree(similarDocuments);
         JsonNode results = root.path("results");
@@ -199,14 +197,6 @@ public class ChatService {
         String fileName = firstResult.path("file_name").asText();
         log.info("📄 fileName: {}", fileName);
         if (fileName == null || fileName.isEmpty()) {
-            return null;
-        }
-
-        // score 확인
-        double score = firstResult.path("score").asDouble();
-        log.info("📊 score: {}", score);
-        if (score >= SCORE_THRESHOLD) {
-            log.warn("⚠️ score threshold 초과");
             return null;
         }
 
