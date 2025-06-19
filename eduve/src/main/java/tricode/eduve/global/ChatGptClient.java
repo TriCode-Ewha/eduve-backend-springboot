@@ -197,6 +197,7 @@ public class ChatGptClient {
                         JSONObject firstContent = msg.getJSONArray("content").getJSONObject(0);
                         JSONObject textObj = firstContent.getJSONObject("text");
                         String reply = textObj.getString("value");
+                        reply = cleanOpenAIResponse(reply);
                         return ResponseEntity.ok(reply);
                     }
                 }
@@ -206,6 +207,7 @@ public class ChatGptClient {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Assistant API 호출 중 예외 발생: " + e.getMessage());
             }
+
         }
 
 //        JSONObject messageSystem = new JSONObject(); // 시스템 메시지 JSON 객체 생성
@@ -538,6 +540,28 @@ public class ChatGptClient {
         } catch (Exception e) {
             throw new RuntimeException("분석 결과 파싱 중 오류 발생", e);
         }
+    }
+
+    private String cleanOpenAIResponse(String rawResponse) {
+        if (rawResponse == null || rawResponse.isEmpty()) return "";
+
+        // 1. 앞뒤 < > 제거
+        if (rawResponse.startsWith("<") && rawResponse.endsWith(">")) {
+            rawResponse = rawResponse.substring(1, rawResponse.length() - 1);
+        }
+
+        // 2. 상태 코드 부분 ("200 OK OK," 기준으로 split)
+        int commaIndex = rawResponse.indexOf(",");
+        if (commaIndex != -1 && rawResponse.startsWith("200 OK")) {
+            rawResponse = rawResponse.substring(commaIndex + 1).trim();
+        }
+
+        // 3. 맨 끝의 ",[]" 제거
+        if (rawResponse.endsWith(",[]")) {
+            rawResponse = rawResponse.substring(0, rawResponse.length() - 3).trim();
+        }
+
+        return rawResponse;
     }
 
 
