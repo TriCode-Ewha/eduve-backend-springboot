@@ -7,5 +7,8 @@ public enum FileType {
     TEXT,
     DOCX,
     PPT,
-    VOICE
+    VOICE,
+    PNG,
+    JPG,
+    JPEG
 }
