@@ -250,10 +250,20 @@ public class ChatGptClient {
     }
 
     private String uploadFileToOpenAI(String fileUrl) throws Exception {
-        //주어진 fileUrl(예: presigned S3 URL)로 HTTP GET 요청을 설정합니다.
-        URI uri = new URI(fileUrl); // 인코딩 손상 없이 보존
-        URL url = uri.toURL();
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        // ✅ 한글 등 특수문자가 포함된 URL을 안전하게 인코딩
+        URL rawUrl = new URL(fileUrl);
+        URI encodedUri = new URI(
+                rawUrl.getProtocol(),
+                rawUrl.getUserInfo(),
+                rawUrl.getHost(),
+                rawUrl.getPort(),
+                rawUrl.getPath(),
+                rawUrl.getQuery(),
+                rawUrl.getRef()
+        );
+        URL encodedUrl = encodedUri.toURL();
+
+        HttpURLConnection connection = (HttpURLConnection) encodedUrl.openConnection();
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
 
@@ -275,7 +285,12 @@ public class ChatGptClient {
         body.add("file", new FileSystemResource(tempFile));
 
         HttpEntity<MultiValueMap<String, Object>> fileRequest = new HttpEntity<>(body, fileHeaders);
-        ResponseEntity<String> uploadResponse = restTemplate.postForEntity("https://api.openai.com/v1/files", fileRequest, String.class);
+        ResponseEntity<String> uploadResponse = restTemplate.postForEntity(
+                "https://api.openai.com/v1/files",
+                fileRequest,
+                String.class
+        );
+
         tempFile.delete();
 
         if (uploadResponse.getStatusCode() == HttpStatus.OK) {
@@ -284,6 +299,7 @@ public class ChatGptClient {
             throw new IOException("파일 업로드 실패: " + uploadResponse.getBody());
         }
     }
+
 
     private String buildPrompt(String question, String similarDocuments, Preference preference, String messageLikeAnalysisResult, FileInfoDto fileInfo) {
 
