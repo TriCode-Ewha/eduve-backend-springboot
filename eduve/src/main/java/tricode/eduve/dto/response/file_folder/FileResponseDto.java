@@ -18,6 +18,8 @@ public class FileResponseDto {
     private String role;
     private String username;
 
+    private String content; // ✅ text 파일이면 여기에 본문 추가
+
     // File 엔티티를 DTO로 변환하는 정적 메서드
     public static FileResponseDto from(File file, String prefixToRemove) {
         String displayName = file.getFileName();
