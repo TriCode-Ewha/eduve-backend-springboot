@@ -35,6 +35,9 @@ public class File extends CreatedTimeEntity {
     @Column(nullable = false)
     private String fileUrl;
 
+    @Column(nullable = true)
+    private String content;
+
     @ManyToOne
     @JoinColumn(name = "folder_id")
     private Folder folder;

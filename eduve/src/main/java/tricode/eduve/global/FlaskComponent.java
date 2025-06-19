@@ -92,6 +92,7 @@ public class FlaskComponent {
 
             // Flask에서 에러 메시지를 JSON 형태로 반환하는 경우 처리 가능
             if (response.getStatusCode().is2xxSuccessful()) {
+
                 return response.getBody() != null ? response.getBody().getText() : null;
             } else {
                 return "Flask server error: " + response.getBody();

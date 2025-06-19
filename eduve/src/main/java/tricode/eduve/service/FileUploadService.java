@@ -214,6 +214,8 @@ public class FileUploadService {
 
         amazonS3Client.putObject(bucket, storedFileName, file.getInputStream(), metadata);
 
+        String extractedText = embedDocument(file, fileUrl, userId);
+
         // File 엔티티 생성 및 저장
         File fileEntity = File.builder()
                 .fileName(storedFileName)  // DB에는 userId/파일명 저장
@@ -221,6 +223,7 @@ public class FileUploadService {
                 .fileUrl(fileUrl)
                 .user(user)
                 .folder(folder)
+                .content(extractedText)
                 .build();
 
         fileRepository.save(fileEntity);
