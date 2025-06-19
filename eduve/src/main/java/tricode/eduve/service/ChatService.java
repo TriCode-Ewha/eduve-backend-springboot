@@ -184,18 +184,18 @@ public class ChatService {
 
         // results가 배열이 아니거나 비어 있으면 null 반환
         if (!results.isArray() || results.isEmpty()) {
-            log.warn("❌ results가 비어 있음");
+            log.debug("❌ results가 비어 있음");
             return null;
         }
 
         JsonNode firstResult = results.get(0);
         if (firstResult == null || firstResult.isEmpty()) {
-            log.warn("❌ firstResult가 비어 있음");
+            log.debug("❌ firstResult가 비어 있음");
             return null;
         }
 
         String fileName = firstResult.path("file_name").asText();
-        log.info("📄 fileName: {}", fileName);
+        log.debug("📄 fileName: {}", fileName);
         if (fileName == null || fileName.isEmpty()) {
             return null;
         }
@@ -204,7 +204,7 @@ public class ChatService {
 
         Optional<File> file = fileRepository.findByFileName(fileName);
         if (file.isEmpty()) {
-            log.warn("❌ fileRepository에서 파일 없음");
+            log.debug("❌ fileRepository에서 파일 없음");
             return null;
         }
 
@@ -213,8 +213,8 @@ public class ChatService {
         // filePath 추가
         String filePath = file.map(File::getFullPath).orElse(null);
 
-        log.info("🌐 url: {}", url);
-        log.info("📂 filePath: {}", filePath);
+        log.debug("🌐 url: {}", url);
+        log.debug("📂 filePath: {}", filePath);
 
 
         return new FileInfoDto(fileName, page, url, filePath);
