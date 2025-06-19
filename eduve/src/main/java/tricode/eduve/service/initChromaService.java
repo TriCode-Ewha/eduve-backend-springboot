@@ -11,7 +11,8 @@ public class initChromaService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public void callDeleteApi(Long userId) {
-        String url = "http://localhost:5000/delete_all?user_id=" + userId;
+        // String url = "http://localhost:5000/delete_all?user_id=" + userId;
+        String url = "http://172.31.45.158:5000/delete_all?user_id=" + userId;
 
         HttpHeaders headers = new HttpHeaders();
 
