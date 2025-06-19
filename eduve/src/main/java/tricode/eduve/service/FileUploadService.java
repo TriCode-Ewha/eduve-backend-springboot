@@ -161,6 +161,9 @@ public class FileUploadService {
             case "txt" -> FileType.TEXT;
             case "ppt", "pptx" -> FileType.PPT;
             case "mp3", "wav", "m4a" -> FileType.VOICE;
+            case "png" -> FileType.PNG;
+            case "jpg" -> FileType.JPG;
+            case "jpeg" -> FileType.JPEG;
             default -> throw new IOException("지원하지 않는 파일 형식입니다: " + extension);
         };
 
