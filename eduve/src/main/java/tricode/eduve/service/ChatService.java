@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import tricode.eduve.domain.*;
@@ -25,6 +26,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ChatService {
 
     private final ChatGptClient chatGptClient;
@@ -34,9 +36,6 @@ public class ChatService {
     private final UserCharacterService userCharacterService;
     private final MessageLikePreferenceRepository messageLikePreferenceRepository;
     private final FileRepository fileRepository;
-
-    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
-
     /*
     // 질문을 저장하고 비동기적으로 ChatGPT API 호출
     @Async

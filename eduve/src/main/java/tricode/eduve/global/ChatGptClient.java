@@ -23,11 +23,12 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
-
+import lombok.extern.slf4j.Slf4j;
 
 
 @RequiredArgsConstructor
 @Configuration
+@Slf4j
 public class ChatGptClient {
 
     @Value("${chatgpt.api-key}")
@@ -96,12 +97,23 @@ public class ChatGptClient {
                     preference,
                     messageLikeAnalysisResult,
                     fileInfo);
+            log.debug("📌 Assistant 요청 prompt: {}", prompt);
+
+            if (fileInfo == null || fileInfo.getFileUrl() == null) {
+                log.error("❌ fileInfo가 null이거나 fileUrl이 없습니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 정보가 없습니다.");
+            }
+
             String fileUrl = fileInfo.getFileUrl();
+            log.debug("📎 OpenAI에 업로드할 파일 URL: {}", fileUrl);
+
             String fileId;
 
             try {
                 fileId = uploadFileToOpenAI(fileUrl);
+                log.debug("✅ 파일 업로드 성공 - fileId: {}", fileId);
             } catch (Exception e) {
+                log.error("❌ OpenAI 파일 업로드 실패", e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("파일 업로드 실패: " + e.getMessage());
             }
 
