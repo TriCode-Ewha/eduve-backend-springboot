@@ -102,68 +102,57 @@ public class ChatService {
 
 
     public MessageUnitDto startConversation(MessageRequestDto requestDto, Long userId, Long graph, Long url) throws Exception {
+        try {
+            String userMessage = requestDto.getQuestion();
 
-        String userMessage = requestDto.getQuestion();
+            // 1. Conversation 처리 (주제 유사도검색 + 1시간 기준)
+            Message message = conversationService.processUserMessage(userId, userMessage);
 
-        // 1. Conversation 처리 (주제 유사도검색 + 1시간 기준)
-        Message message = conversationService.processUserMessage(userId, userMessage);
+            User user = userRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        User user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
-
-        String similarDocuments = null;
-        if (user.getRole().equals("ROLE_Student")) {
-            System.out.println("진입 성공");
-            Optional<User> teacher = userRepository.findByUsernameAndRole(user.getTeacherUsername(), "ROLE_Teacher");
-            if (teacher.isPresent()) {
-                // 질문 유사도 검색
-                similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, teacher.get());
-                // 선생님 잘 찾았는지 로그 찍기
-                User teacherUser = teacher.get();
-                System.out.println("teacher username: " + teacherUser.getUsername());
-            }else{
+            String similarDocuments = null;
+            if (user.getRole().equals("ROLE_Student")) {
+                Optional<User> teacher = userRepository.findByUsernameAndRole(user.getTeacherUsername(), "ROLE_Teacher");
+                if (teacher.isPresent()) {
+                    similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, teacher.get());
+                } else {
+                    similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, null);
+                }
+            } else {
                 similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, null);
             }
-        }else{
-            // 질문 유사도 검색
-            similarDocuments = flaskComponent.findSimilarDocuments(userMessage, userId, null);
+
+            FileInfoDto fileInfo = null;
+            if (url == 1L) {
+                fileInfo = extractFirstFileInfo(similarDocuments);
+            }
+
+            Preference userPreference = userCharacterService.getPrefernceByUserId(userId);
+            String analysisResult = messageLikePreferenceRepository.findByUser(user)
+                    .map(MessageLikePreference::getAnalysisResult)
+                    .orElse(null);
+
+            ResponseEntity<String> response;
+            if (analysisResult != null && !analysisResult.isBlank()) {
+                response = chatGptClient.chat(userMessage, similarDocuments, userPreference, analysisResult, fileInfo, graph);
+            } else {
+                response = chatGptClient.chat(userMessage, similarDocuments, userPreference, null, fileInfo, graph);
+            }
+
+            String parsedResponse = (graph == 0)
+                    ? parseResponse(response)
+                    : String.valueOf(response);
+
+            Message botMessage = Message.createBotResponse(message.getConversation(), parsedResponse, message);
+            conversationService.saveBotMessage(botMessage);
+
+            return MessageUnitDto.from(message, botMessage, fileInfo);
+
+        } catch (Exception e) {
+            log.error("❌ startConversation 실패 - 요청 유저 ID: {}, 질문: {}", userId, requestDto.getQuestion(), e);
+            throw new RuntimeException("대화 시작 중 오류 발생", e);
         }
-
-        FileInfoDto fileInfo = null;
-        if(url == 1L){
-            // 유사도검색 결과에서 파일명 추출해서 파일 url 반환
-            fileInfo = extractFirstFileInfo(similarDocuments);
-        }
-
-        // 사용자가 설정한 TONE/DISCRIPTIONLEVEL 조회
-        Preference userPreference = userCharacterService.getPrefernceByUserId(userId); // tone, explanationLevel 포함
-
-        // 사용자 좋아요 분석 조회
-        String analysisResult = messageLikePreferenceRepository.findByUser(user)
-                .map(MessageLikePreference::getAnalysisResult)
-                .orElse(null);
-
-        // 좋아요 분석이 있으면 chatGPT로 같이 보내기
-        ResponseEntity<String> response;
-        if (analysisResult != null && !analysisResult.isBlank()) {
-            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, analysisResult, fileInfo, graph);
-        } else {
-            response = chatGptClient.chat(userMessage, similarDocuments, userPreference, null, fileInfo, graph);
-        }
-
-        String parsedResponse = null;
-        if(graph == 0){
-            parsedResponse = parseResponse(response);
-        }
-        else{
-            parsedResponse = String.valueOf(response);
-        }
-
-        // 3. 봇 응답 저장
-        Message botMessage = Message.createBotResponse(message.getConversation(), parsedResponse, message);
-        conversationService.saveBotMessage(botMessage);
-
-        return MessageUnitDto.from(message,botMessage, fileInfo);
     }
 
     // 유사도 검색 결과에서 파일 제목과 url 추출
