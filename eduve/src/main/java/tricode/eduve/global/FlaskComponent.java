@@ -8,6 +8,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import tricode.eduve.domain.User;
+import tricode.eduve.dto.response.EmbeddingResponse;
 
 import java.io.IOException;
 import java.util.Map;
@@ -87,11 +88,11 @@ public class FlaskComponent {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
+            ResponseEntity<EmbeddingResponse> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, EmbeddingResponse.class);
 
             // Flask에서 에러 메시지를 JSON 형태로 반환하는 경우 처리 가능
             if (response.getStatusCode().is2xxSuccessful()) {
-                return response.getBody();
+                return response.getBody() != null ? response.getBody().getText() : null;
             } else {
                 return "Flask server error: " + response.getBody();
             }
